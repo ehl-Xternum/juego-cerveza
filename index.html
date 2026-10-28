@@ -132,6 +132,10 @@
   .tarj.crema .lbl { flex: 1; }
   .tarj.oc { width: 160px; flex-direction: column; align-items: center; padding: 7px 10px 8px; gap: 4px; }
   .tarj.oc svg { width: 20px; height: 24px; }
+  .tarj.oc { width: auto; min-width: 160px; }
+  .tarj.oc .oc-de { white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 3px; background: #fff; border-radius: 4px; padding: 3px 4px; width: 100%; box-sizing: border-box; font-size: 7.5px; color: #333; text-transform: none; }
+  .tarj.oc .oc-de i { font-style: normal; font-weight: 800; }
+  .tarj.oc .oc-de b { color: #fff; border-radius: 999px; padding: 1px 5px; font-weight: 800; }
   .ok-entrega { display: inline-flex; align-items: center; gap: 6px; background: var(--verde-suave); color: var(--verde); border-radius: 999px; padding: 5px 13px 5px 6px; font-weight: 900; font-size: .9rem; margin-bottom: 12px; }
   .ok-entrega span { width: 22px; height: 22px; border-radius: 50%; background: var(--verde); color: #fff; display: grid; place-content: center; font-size: 13px; }
   .instr-espera { background: #fff; color: var(--texto); border-radius: 14px; padding: 12px; margin-top: 14px; text-align: left; }
@@ -315,7 +319,7 @@ var ICONOS = {
 //  TEXTOS Y COLORES (se pueden editar acá)
 // =====================================================================
 var ROLES = {
-  "Minorista":    { color: "#009639", texto: "#ffffff", suave: "#e0f3e7", oscuro: "#006b28", cliente: "Cliente final", proveedor: "Mayorista" },
+  "Minorista":    { color: "#78BE20", texto: "#ffffff", suave: "#eef6e1", oscuro: "#4a7a10", cliente: "Cliente final", proveedor: "Mayorista" },
   "Mayorista":    { color: "#006C67", texto: "#ffffff", suave: "#ddefee", oscuro: "#004a46", cliente: "Minorista",     proveedor: "Distribuidor" },
   "Distribuidor": { color: "#A8007C", texto: "#ffffff", suave: "#f6e0ef", oscuro: "#7a005a", cliente: "Mayorista",     proveedor: "Fábrica" },
   "Fábrica":      { color: "#624976", texto: "#ffffff", suave: "#efebf3", oscuro: "#4a3459", cliente: "Distribuidor",  proveedor: null }
@@ -359,43 +363,44 @@ function pasosChecklist(rol, deuda) {
 //  El segundo valor es el rol duenio de la tarjeta (define su color).
 // =====================================================================
 var INSTRUCCIONES = {
-  "Distribuidor": [
-    ["Mover", ["A", "Distribuidor"], "hacia", ["B", "Distribuidor"]],
-    ["Mover", ["C", "Distribuidor"], "hacia", ["A", "Mayorista"]],
-    ["Mirar la carta", ["E", "Distribuidor"], "y colocarla debajo de la parte superior del tablero"],
-    ["Decidir cuánto entregar y mover de", ["B", "Distribuidor"], "hacia", ["C", "Mayorista"], "Registrar en la app la entrega"],
-    ["Mover", ["D", "Distribuidor"], "hacia", ["E", "Fábrica"]],
-    ["Realizar", ["OC", "Distribuidor"], "y colocarla en", ["D", "Distribuidor"], "Registrar en la app"]
-  ],
-  // El minorista tiene 5 pasos: no tiene el paso 2 general (entrega directo al cliente)
+  // Todos los roles tienen 6 pasos, iguales a los pasos del facilitador
   "Minorista": [
     ["Mover", ["A", "Minorista"], "hacia", ["B", "Minorista"]],
-    ["Mirar la carta", ["E", "Cliente", "Demanda del<br>mercado"], "y colocarla debajo de la parte superior del tablero"],
-    ["Decidir cuánto entregar y mover de", ["B", "Minorista"], "hacia", ["B", "Cliente", "Entrega al<br>cliente"], "Registrar en la app la entrega"],
+    ["Esperar a que el resto de los roles terminen sus movimientos para avanzar al paso 3."],
+    ["Mirar y recordar", ["D", "Cliente", "Orden de compra"], "Colocarla con el dorso hacia arriba debajo de la parte superior del tablero de <b>Demanda del Cliente</b>."],
+    ["Decidir cuánto entregar y mover de", ["B", "Minorista"], "hacia", ["F", "Cliente"], "Registrar en la app la entrega."],
     ["Mover", ["D", "Minorista"], "hacia", ["E", "Mayorista"]],
-    ["Realizar", ["OC", "Minorista"], "y colocarla en", ["D", "Minorista"], "Registrar en la app"]
-  ],
-  // La fábrica tiene 5 pasos: no tiene el paso 5 general (pasar la orden al proveedor)
-  "Fábrica": [
-    ["Mover", ["A", "Fábrica", "Productos<br>terminados"], "hacia", ["B", "Fábrica"]],
-    ["Mover", ["C", "Fábrica"], "hacia", ["A", "Distribuidor"]],
-    ["Mirar la carta", ["E", "Fábrica"], "y colocarla debajo de la parte superior del tablero"],
-    ["Decidir cuánto entregar y mover de", ["B", "Fábrica"], "hacia", ["C", "Distribuidor"], "Registrar en la app la entrega"],
-    ["Realizar", ["OC", "Fábrica", "Orden de<br>producción"], "y colocarla en", ["D", "Fábrica", "Producción<br>entregada"], "Registrar en la app"]
+    ["Agarrar la carta que está bajo el tablero de Compras y realizar", ["OC", "Minorista", null, ["Minorista", "Mayorista"]], "Colocarla en", ["D", "Minorista"], "Registrar en la app."]
   ],
   "Mayorista": [
     ["Mover", ["A", "Mayorista"], "hacia", ["B", "Mayorista"]],
     ["Mover", ["C", "Mayorista"], "hacia", ["A", "Minorista"]],
-    ["Mirar la carta", ["E", "Mayorista"], "y colocarla debajo de la parte superior del tablero"],
-    ["Decidir cuánto entregar y mover de", ["B", "Mayorista"], "hacia", ["C", "Mayorista"], "Registrar en la app la entrega"],
+    ["Mirar y recordar", ["E", "Mayorista"], "Colocarla con el dorso hacia arriba debajo de la parte superior del tablero de <b>Compras del Minorista</b>."],
+    ["Decidir cuánto entregar y mover de", ["B", "Mayorista"], "hacia", ["C", "Mayorista"], "Registrar en la app la entrega."],
     ["Mover", ["D", "Mayorista"], "hacia", ["E", "Distribuidor"]],
-    ["Realizar", ["OC", "Mayorista"], "y colocarla en", ["D", "Mayorista"], "Registrar en la app"]
+    ["Agarrar la carta que está bajo el tablero de Compras y realizar", ["OC", "Mayorista", null, ["Mayorista", "Distribuidor"]], "Colocarla en", ["D", "Mayorista"], "Registrar en la app."]
+  ],
+  "Distribuidor": [
+    ["Mover", ["A", "Distribuidor"], "hacia", ["B", "Distribuidor"]],
+    ["Mover", ["C", "Distribuidor"], "hacia", ["A", "Mayorista"]],
+    ["Mirar y recordar", ["E", "Distribuidor"], "Colocarla con el dorso hacia arriba debajo de la parte superior del tablero de <b>Compras del Mayorista</b>."],
+    ["Decidir cuánto entregar y mover de", ["B", "Distribuidor"], "hacia", ["C", "Mayorista"], "Registrar en la app la entrega."],
+    ["Mover", ["D", "Distribuidor"], "hacia", ["E", "Fábrica"]],
+    ["Agarrar la carta que está bajo el tablero de Compras y realizar", ["OC", "Distribuidor", null, ["Distribuidor", "Fábrica"]], "Colocarla en", ["D", "Distribuidor"], "Registrar en la app."]
+  ],
+  "Fábrica": [
+    ["Mover", ["A", "Fábrica", "Productos<br>terminados"], "hacia", ["B", "Fábrica"]],
+    ["Mover", ["C", "Fábrica"], "hacia", ["A", "Distribuidor"]],
+    ["Mirar y recordar", ["E", "Fábrica"], "Colocarla con el dorso hacia arriba debajo de la parte superior del tablero de <b>Compras del Distribuidor</b>."],
+    ["Decidir cuánto entregar y mover de", ["B", "Fábrica"], "hacia", ["C", "Distribuidor"], "Registrar en la app la entrega."],
+    ["Esperar a que el resto de los roles terminen sus movimientos para avanzar al paso 6."],
+    ["Agarrar la carta que está bajo el tablero de Compras y realizar", ["OC", "Fábrica", "Orden de<br>producción", ["Fábrica"]], "Colocarla en", ["D", "Fábrica", "Orden de<br>producción"], "Registrar en la app."]
   ]
 };
 
-// Paso del facilitador (1 a 6) -> paso del tablero de cada rol (0 = no aplica)
-var PASO_LOCAL = { "Minorista": [1, 0, 2, 3, 4, 5], "Fábrica": [1, 2, 3, 4, 0, 5] };
-var COLOR_CLIENTE = "#78BE20";
+// Ya no hace falta traducir pasos: todos los roles siguen los 6 pasos del facilitador
+var PASO_LOCAL = {};
+var COLOR_CLIENTE = "#8C8C8C";
 function pasoLocal(rol, pasoGlobal) {
   return PASO_LOCAL[rol] ? PASO_LOCAL[rol][pasoGlobal - 1] : pasoGlobal;
 }
@@ -405,6 +410,7 @@ var SVG_TARJ = {
   camion: '<svg viewBox="0 0 28 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="1" y="4" width="16" height="11" rx="1"/><path d="M17 8h5l4 4v3h-9z"/><path d="M20 9v3h4.5"/><circle cx="6" cy="17.5" r="2.3" fill="#FBF2E4"/><circle cx="21" cy="17.5" r="2.3" fill="#FBF2E4"/></svg>',
   cajas: '<svg viewBox="0 0 28 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="8.5" y="1.5" width="11" height="8" rx="1"/><path d="M14 1.5v2.5"/><rect x="2" y="12.5" width="11" height="8" rx="1"/><path d="M7.5 12.5v2.5"/><rect x="15" y="12.5" width="11" height="8" rx="1"/><path d="M20.5 12.5v2.5"/></svg>',
   sobre: '<svg viewBox="0 0 28 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="1.5" y="3.5" width="25" height="16" rx="1.5"/><path d="M1.5 4.5l12.5 9 12.5-9M1.5 19l9.5-7.5M26.5 19L17 11.5"/></svg>',
+  monedas: '<svg viewBox="0 0 28 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="18.5" cy="4" rx="6.5" ry="2.3"/><path d="M12 4v13.2c0 1.3 2.9 2.3 6.5 2.3s6.5-1 6.5-2.3V4"/><path d="M12 7.5c0 1.3 2.9 2.3 6.5 2.3s6.5-1 6.5-2.3M12 10.8c0 1.3 2.9 2.3 6.5 2.3s6.5-1 6.5-2.3M12 14c0 1.3 2.9 2.3 6.5 2.3s6.5-1 6.5-2.3"/><circle cx="8" cy="15.2" r="5.8" fill="#FBF2E4"/><path d="M9.9 12.9c-.4-.6-1.1-.9-1.9-.9-1.1 0-1.9.6-1.9 1.4 0 1.9 3.9 1 3.9 3 0 .8-.9 1.4-2 1.4-.9 0-1.6-.3-2-.9M8 11v1M8 18.4v1"/></svg>',
   hoja: '<svg viewBox="0 0 20 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3 1.5h9l5 5v15a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 2 21.5v-18.5A1.5 1.5 0 0 1 3 1.5z"/><path d="M12 1.5v5h5M6 14h8M6 17.5h8"/></svg>'
 };
 var TARJETAS = {
@@ -412,13 +418,23 @@ var TARJETAS = {
   B: { tipo: "llena", texto: "Depósito", icono: "cajas" },
   C: { tipo: "llena", texto: "Entregado a<br>transporte", icono: "camion" },
   D: { tipo: "crema", texto: "Orden de compra<br>entregada", icono: "sobre" },
-  E: { tipo: "crema", texto: "Orden de compra<br>por llegar", icono: "sobre" }
+  E: { tipo: "crema", texto: "Orden de compra<br>por llegar", icono: "sobre" },
+  F: { tipo: "llena", texto: "Entrega al<br>cliente", icono: "monedas" }
 };
 
-function htmlTarjeta(letra, duenio, textoPropio) {
+// Nombre del rol como figura en el tablero (la fábrica aparece como "Fabricante")
+function pildora(rol) {
+  var c = rol === "Cliente" ? COLOR_CLIENTE : ROLES[rol].color;
+  return '<b style="background:' + c + '">' + (rol === "Fábrica" ? "Fabricante" : rol) + '</b>';
+}
+function htmlTarjeta(letra, duenio, textoPropio, dePara) {
   var c = duenio === "Cliente" ? COLOR_CLIENTE : ROLES[duenio].color;
   if (letra === "OC") {
-    return '<span class="tarj llena oc" style="background:' + c + '">' + SVG_TARJ.hoja + '<span>' + (textoPropio || 'Orden de compra') + '</span></span>';
+    var franja = '';
+    if (dePara) {
+      franja = '<span class="oc-de"><i>DE:</i>' + pildora(dePara[0]) + (dePara[1] ? '<i>PARA:</i>' + pildora(dePara[1]) : '') + '</span>';
+    }
+    return '<span class="tarj llena oc" style="background:' + c + '">' + franja + SVG_TARJ.hoja + '<span>' + (textoPropio || 'Orden de compra') + '</span></span>';
   }
   var t = Object.assign({}, TARJETAS[letra]);
   if (textoPropio) t.texto = textoPropio;
@@ -433,7 +449,7 @@ function htmlTarjeta(letra, duenio, textoPropio) {
 // paso = número de paso del tablero del rol
 function htmlInstruccion(rol, paso) {
   var partes = INSTRUCCIONES[rol][paso - 1].map(function (x) {
-    return typeof x === "string" ? '<span>' + x + '</span>' : htmlTarjeta(x[0], x[1], x[2]);
+    return typeof x === "string" ? '<span>' + x + '</span>' : htmlTarjeta(x[0], x[1], x[2], x[3]);
   });
   return '<div class="instr"><span class="num-paso">' + paso + '</span><div class="linea">' + partes.join("") + '</div></div>';
 }
