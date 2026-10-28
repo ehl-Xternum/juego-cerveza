@@ -729,6 +729,7 @@ function enviarJugada() {
   var btn = $("btnEnviar"), textoBtn = btn.textContent;
   btn.disabled = true; btn.textContent = "Guardando…";
   var jugada = pendiente, esEntrega = jugada.etapa !== "pedido";
+  var semanaIntento = estado.semana;
   var datos = { grupo: yo.grupo, rol: yo.rol, dispositivo: yo.dispositivo };
   if (esEntrega) datos.entregado = jugada.valor; else datos.pedido = jugada.valor;
 
@@ -752,8 +753,17 @@ function enviarJugada() {
       btn.disabled = false; btn.textContent = textoBtn;
       if (e.message.indexOf("LUGAR_LIBERADO") !== -1) { lugarLiberado(); return; }
       if (e.message.indexOf("No tenés tantas cajas") !== -1) { marcarError("entregado", e.message); $("entregado").focus(); return; }
-      if (e.message.indexOf("Ya registraste la entrega") !== -1) { refrescarEstado().then(function () { actualizarFase(false); }); return; }
-      $("errJuego").textContent = e.message;
+      // Puede que se haya guardado aunque la respuesta no llegó: se consulta antes de mostrar el error
+      refrescarEstado().then(function (est) {
+        var guardado = est && (esEntrega ? est.entregaRegistrada : est.ultimaSemana >= semanaIntento);
+        if (guardado) {
+          pendiente = null; etapa = null;
+          $("entregado").value = ""; $("pedido").value = "";
+          actualizarFase(false, esEntrega ? undefined : est.ultimaSemana);
+        } else {
+          $("errJuego").textContent = e.message;
+        }
+      });
     });
 }
 
@@ -772,11 +782,7 @@ function actualizarFase(conAviso, recienEnviada) {
 
   if (esperando) {
     $("zonaForm").style.display = "none";
-    if (yaEnvio) {
-      mostrarConfirmacion("¡Semana " + juego.semana + " enviada!");
-    } else {
-      abrirEspera(recienEnviada || estado.ultimaSemana);
-    }
+    abrirEspera(recienEnviada || estado.ultimaSemana);
     return;
   }
   // Qué toca registrar: la entrega desde el paso 4, el pedido en el paso 6
@@ -884,7 +890,7 @@ function abrirEspera(semanaEnviada) {
   modal.className = "modal espera";
   semanaEsperada = estado.semana;
   var texto = semanaEnviada > 0
-    ? "La semana " + semanaEsperada + " todavía no está habilitada."
+    ? "Tu pedido quedó registrado. Esperá a que el facilitador habilite la semana " + semanaEsperada + "."
     : "El juego todavía no empezó.";
   modal.innerHTML =
     (semanaEnviada > 0 ? '<div class="ok-envio"><span>✓</span>Semana ' + semanaEnviada + ' enviada</div>' : '') +
