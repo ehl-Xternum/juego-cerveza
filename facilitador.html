@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<title>Panel del facilitador</title>
+<meta name="color-scheme" content="only light">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  /* Siempre en modo claro: evita que Android oscurezca la página */
+  :root { color-scheme: only light; }
+  :root {
+    --texto: #1f2933; --texto-2: #5b6670; --texto-3: #9aa5b1;
+    --borde: #e3e7ec; --campo: #cbd2d9; --gris: #f3f5f8;
+    --azul: #334e68; --azul-suave: #e6ecf2; --verde: #0a7a4b; --verde-suave: #e3f8ee;
+    --amarillo: #fff6e0; --amarillo-texto: #7a5200; --rojo: #C70627;
+    --radio: 14px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { font-family: 'Lato', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif; background: var(--gris); color: var(--texto); -webkit-tap-highlight-color: transparent; }
+  button { font-family: inherit; cursor: pointer; color: inherit; }
+  .app { max-width: 520px; margin: 0 auto; min-height: 100vh; background: #fff; }
+  .cab { background: var(--texto); color: #fff; padding: 14px 16px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 5; }
+  .cab h1 { font-size: 1.15rem; font-weight: 900; margin: 0; }
+  .cab .pill { margin-left: auto; background: #fff; color: var(--texto); border-radius: 999px; padding: 5px 13px; font-weight: 900; font-size: .95rem; white-space: nowrap; }
+  .cont { padding: 16px; }
+  .titulo { font-size: .78rem; font-weight: 900; color: var(--texto-2); letter-spacing: .06em; text-transform: uppercase; margin: 0 0 8px; display: flex; align-items: center; }
+  .titulo .der { margin-left: auto; text-transform: none; letter-spacing: 0; font-size: .85rem; }
+
+  .btn { width: 100%; border: none; border-radius: var(--radio); padding: 16px; font-size: 1.1rem; font-weight: 900; background: var(--azul); color: #fff; box-shadow: 0 4px 12px rgba(0, 0, 0, .12); }
+  .btn:active { transform: scale(.98); }
+  .btn:disabled { opacity: .5; }
+  .btn.verde { background: var(--verde); }
+  .btn-borde { border: 2px solid var(--campo); background: #fff; border-radius: var(--radio); padding: 14px; font-size: 1.05rem; font-weight: 900; box-shadow: none; color: var(--texto); }
+  .botones { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
+
+  .reloj { display: flex; align-items: center; gap: 10px; background: var(--gris); border-radius: var(--radio); padding: 12px 14px; margin-bottom: 14px; }
+  .reloj .t { font-size: 1.9rem; font-weight: 900; font-variant-numeric: tabular-nums; }
+  .reloj .lbl { color: var(--texto-2); font-weight: 700; font-size: .9rem; line-height: 1.3; }
+
+  .pasos { margin-bottom: 14px; }
+  .paso { width: 100%; display: flex; align-items: center; gap: 12px; border: none; background: none; padding: 9px 8px; border-radius: 12px; font-size: 1.05rem; font-weight: 700; color: var(--texto-3); text-align: left; }
+  .paso .n { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--campo); display: grid; place-content: center; font-size: .85rem; font-weight: 900; flex: none; }
+  .paso.hecho { color: var(--texto-2); }
+  .paso.hecho .n { background: var(--verde); border-color: var(--verde); color: #fff; }
+  .paso.actual { background: var(--azul-suave); color: var(--texto); }
+  .paso.actual .n { background: var(--azul); border-color: var(--azul); color: #fff; }
+  .paso .ahora { margin-left: auto; font-size: .75rem; font-weight: 900; color: var(--azul); }
+  .instr-fac { background: #fff; border: 2px solid var(--azul); border-radius: 12px; padding: 12px 14px; margin: 2px 0 10px 40px; font-size: 1rem; line-height: 1.5; color: #575757; }
+  .instr-fac small { display: block; margin-top: 6px; font-size: .9rem; }
+  .instr-fac .aviso { background: #fff4d6; color: #7a5300; border-radius: 8px; padding: 8px 10px; font-weight: 900; font-size: .92rem; line-height: 1.35; margin-bottom: 8px; }
+  .instr-fac .quien { margin: 0 0 6px; font-size: .74rem; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; color: var(--azul); }
+  .instr-fac .bloque-distinto { margin-top: 12px; border: 2.5px dashed; border-radius: 10px; padding: 0 10px 10px; background: #fafafa; }
+  .instr-fac .bloque-distinto .quien { display: table; color: #fff; border-radius: 0 0 8px 8px; padding: 4px 10px; margin: 0 0 8px; }
+  .instr-fac .aclara { font-style: italic; color: #8a8f96; font-size: .9rem; }
+  .instr-fac .por-rol { display: block; margin-top: 6px; font-size: .88rem; line-height: 1.45; }
+  .instr-fac .por-rol b { white-space: nowrap; }
+  .instr-fac .en-app { display: block; margin-top: 6px; font-weight: 900; color: var(--azul); }
+  .tarj { vertical-align: middle; margin: 3px 0; display: inline-flex; align-items: stretch; border-radius: 6px; font-family: 'Montserrat', 'Lato', sans-serif; font-weight: 800; text-transform: uppercase; font-size: 11.5px; line-height: 1.2; letter-spacing: .01em; }
+  .tarj .lbl { display: flex; align-items: center; justify-content: center; text-align: center; padding: 6px 6px; white-space: nowrap; }
+  .tarj .ficha { position: relative; width: 40px; flex: none; border-radius: 4px; margin: 5px; min-height: 42px; }
+  .tarj .ficha .letra { position: absolute; top: 0; left: 3px; font-size: 17px; font-weight: 700; line-height: 1; }
+  .tarj .ficha svg { position: absolute; right: 3px; bottom: 3px; width: 28px; height: 22px; }
+  .tarj.llena { color: #FBF2E4; }
+  .tarj.llena { width: 160px; }
+  .tarj.llena .lbl { flex: 1; }
+  .tarj.llena .ficha { background: #FBF2E4; }
+  .tarj.crema { background: #FBF2E4; border: 1.5px solid; }
+  .tarj.crema .ficha { order: -1; }
+  .tarj.crema .ficha .letra { color: #FBF2E4; }
+  .tarj.crema { width: 196px; }
+  .tarj.crema .lbl { flex: 1; }
+  .tarj.oc { width: 160px; flex-direction: column; align-items: center; padding: 7px 10px 8px; gap: 4px; }
+  .tarj.oc svg { width: 20px; height: 24px; }
+
+  .nota { background: var(--gris); color: var(--texto-2); border-radius: 12px; padding: 10px 12px; font-weight: 700; font-size: .92rem; margin-bottom: 12px; }
+  .nota.amarilla { background: var(--amarillo); color: var(--amarillo-texto); }
+  .sep { height: 2px; background: var(--borde); margin: 22px 0 18px; }
+
+  .grilla { display: grid; grid-template-columns: 64px repeat(4, 1fr); gap: 6px; align-items: center; font-weight: 700; font-size: .85rem; }
+  .grilla .hdr { text-align: center; font-size: .78rem; font-weight: 900; }
+  .celda { height: 30px; border-radius: 8px; display: grid; place-content: center; font-weight: 900; font-size: .9rem; }
+  .celda.vacia { background: var(--gris); border: 2px dashed var(--campo); color: var(--texto-3); }
+  .celda.conectado { background: #fff; border: 2.5px solid; }
+  .leyenda { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; font-size: .8rem; color: var(--texto-2); font-weight: 700; }
+  .leyenda span { display: inline-flex; align-items: center; gap: 5px; }
+  .leyenda i { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+  .leyenda i.ley { width: auto; min-width: 22px; height: 18px; padding: 0 3px; font-style: normal; font-size: .7rem; font-weight: 900; display: inline-grid; place-content: center; }
+
+  .error { color: var(--rojo); font-weight: 700; text-align: center; margin: 10px 0 0; min-height: 1em; }
+  .cargando { text-align: center; padding: 90px 20px; color: var(--texto-2); font-weight: 700; }
+  .mesas { background: var(--gris); border-radius: var(--radio); padding: 14px; margin: 0 0 18px; text-align: left; }
+  .mesas .lbl { font-weight: 700; margin: 0 0 10px; }
+  .mesas .opciones { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .mesa-opc { border: 2px solid var(--campo); background: #fff; border-radius: 12px; padding: 11px 0; font-size: 1.15rem; font-weight: 900; }
+  .mesa-opc.sel { background: var(--texto); border-color: var(--texto); color: #fff; }
+  .mesas .ayuda { color: var(--texto-2); font-size: .85rem; margin: 10px 0 0; }
+  .inicio { text-align: center; padding: 30px 6px 10px; }
+  .inicio h2 { font-size: 1.5rem; font-weight: 900; margin: 0 0 6px; }
+  .inicio p { color: var(--texto-2); font-weight: 400; margin: 0 0 20px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="cab"><h1>Panel del facilitador</h1><span class="pill" id="pill">–</span></div>
+  <div class="cont" id="cont"><div class="cargando">Cargando…</div></div>
+</div>
+
+<script>
+var PASOS = ["Recibir en el depósito", "Enviar el transporte al cliente", "Leer la orden de compra", "Entregar y registrar en la app", "Pasar la orden al proveedor", "Hacer la nueva orden de compra"];
+var SVG_TARJ = {
+  camion: '<svg viewBox="0 0 28 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="1" y="4" width="16" height="11" rx="1"/><path d="M17 8h5l4 4v3h-9z"/><path d="M20 9v3h4.5"/><circle cx="6" cy="17.5" r="2.3" fill="#FBF2E4"/><circle cx="21" cy="17.5" r="2.3" fill="#FBF2E4"/></svg>',
+  cajas: '<svg viewBox="0 0 28 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="8.5" y="1.5" width="11" height="8" rx="1"/><path d="M14 1.5v2.5"/><rect x="2" y="12.5" width="11" height="8" rx="1"/><path d="M7.5 12.5v2.5"/><rect x="15" y="12.5" width="11" height="8" rx="1"/><path d="M20.5 12.5v2.5"/></svg>',
+  sobre: '<svg viewBox="0 0 28 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="1.5" y="3.5" width="25" height="16" rx="1.5"/><path d="M1.5 4.5l12.5 9 12.5-9M1.5 19l9.5-7.5M26.5 19L17 11.5"/></svg>',
+  monedas: '<svg viewBox="0 0 28 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="18.5" cy="4" rx="6.5" ry="2.3"/><path d="M12 4v13.2c0 1.3 2.9 2.3 6.5 2.3s6.5-1 6.5-2.3V4"/><path d="M12 7.5c0 1.3 2.9 2.3 6.5 2.3s6.5-1 6.5-2.3M12 10.8c0 1.3 2.9 2.3 6.5 2.3s6.5-1 6.5-2.3M12 14c0 1.3 2.9 2.3 6.5 2.3s6.5-1 6.5-2.3"/><circle cx="8" cy="15.2" r="5.8" fill="#FBF2E4"/><path d="M9.9 12.9c-.4-.6-1.1-.9-1.9-.9-1.1 0-1.9.6-1.9 1.4 0 1.9 3.9 1 3.9 3 0 .8-.9 1.4-2 1.4-.9 0-1.6-.3-2-.9M8 11v1M8 18.4v1"/></svg>',
+  hoja: '<svg viewBox="0 0 20 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3 1.5h9l5 5v15a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 2 21.5v-18.5A1.5 1.5 0 0 1 3 1.5z"/><path d="M12 1.5v5h5M6 14h8M6 17.5h8"/></svg>'
+};
+var TARJETAS = {
+  A: { tipo: "llena", texto: "Transporte<br>por llegar", icono: "camion" },
+  B: { tipo: "llena", texto: "Depósito", icono: "cajas" },
+  C: { tipo: "llena", texto: "Entregado a<br>transporte", icono: "camion" },
+  D: { tipo: "crema", texto: "Orden de compra<br>entregada", icono: "sobre" },
+  E: { tipo: "crema", texto: "Orden de compra<br>por llegar", icono: "sobre" },
+  F: { tipo: "llena", texto: "Entrega<br>al cliente", icono: "monedas" }
+};
+var COLOR_TARJ = "#4F4F4F";
+function ch(letra, texto, propio) {
+  var c = COLOR_TARJ;
+  if (letra === "OC") return '<span class="tarj llena oc" style="background:' + c + '">' + SVG_TARJ.hoja + '<span>' + texto + '</span></span>';
+  var t = Object.assign({}, TARJETAS[letra]);
+  if (propio) t.texto = propio;
+  if (t.tipo === "llena") return '<span class="tarj llena" style="background:' + c + '"><span class="lbl">' + t.texto + '</span><span class="ficha" style="color:' + c + '"><span class="letra">' + letra + '</span>' + SVG_TARJ[t.icono] + '</span></span>';
+  return '<span class="tarj crema" style="border-color:' + c + ';color:' + c + '"><span class="ficha" style="background:' + c + ';color:#FBF2E4"><span class="letra">' + letra + '</span>' + SVG_TARJ[t.icono] + '</span><span class="lbl">' + t.texto + '</span></span>';
+}
+// Misma instrucción que ve el jugador en el celular (sin colores de rol)
+// quien: a quiénes aplica la instrucción principal
+// distinto: pasos donde el Minorista o el Fabricante hacen otra cosa
+var TODOS = "Todos los roles";
+var SIN_MIN = "Mayorista, Distribuidor y Fabricante";
+var SIN_FAB = "Minorista, Mayorista y Distribuidor";
+// Texto igual al tablero final. Las tarjetas van en gris porque cada rol las ve de su color;
+// lo que está en gris e itálica (aclara) o en "por-rol" es una ayuda para el facilitador, no está en el tablero.
+function aclara(t) { return ' <span class="aclara">(' + t + ')</span>'; }
+function col(nombre, rol) { return '<b style="color:' + ROLES_COLOR[rol] + '">' + nombre + '</b>'; }
+var ROLES_COLOR = { "Minorista": "#78BE20", "Mayorista": "#006C67", "Distribuidor": "#A8007C", "Fábrica": "#624976", "Cliente": "#8C8C8C" };
+function porRol(lista) {
+  return '<span class="por-rol">' + lista.map(function (x) { return col(x[0], x[1]) + ': ' + x[2]; }).join('<br>') + '</span>';
+}
+var INSTR = [
+  { quien: SIN_FAB,
+    txt: "Mover cajones desde " + ch("A", "") + " hacia " + ch("B", ""),
+    distinto: [{ rol: "Fábrica", txt: "Mover cajones desde " + ch("A", "", "Productos<br>terminados") + " hacia " + ch("B", "") +
+      " y mover cajones desde " + ch("C", "") + " hacia " + ch("A", "", "Productos<br>terminados") }] },
+  { quien: SIN_MIN,
+    txt: "Mover cajones desde " + ch("C", "") + " hacia " + ch("A", "") + aclara("la del cliente"),
+    distinto: [{ rol: "Minorista", txt: "Esperar a que el resto de los roles terminen sus movimientos para avanzar al paso 3." }] },
+  { quien: SIN_MIN,
+    txt: "Mirar " + ch("E", "") + " y colocarla con el dorso hacia arriba debajo de la parte superior del tablero de <b>Compras</b>" + aclara("el de su cliente") + ". Decidir cuántos cajones entregar." +
+      porRol([["Mayorista", "Mayorista", "tablero de " + col("Compras del Minorista", "Minorista")],
+              ["Distribuidor", "Distribuidor", "tablero de " + col("Compras del Mayorista", "Mayorista")],
+              ["Fabricante", "Fábrica", "tablero de " + col("Compras del Distribuidor", "Distribuidor")]]),
+    distinto: [{ rol: "Minorista", txt: "Mirar " + ch("D", "", "Orden de compra") + " Colocarla con el dorso hacia arriba debajo de la parte superior del tablero de " + col("Demanda del Cliente", "Cliente") + ". Decidir cuántos cajones entregar." }] },
+  { quien: SIN_MIN,
+    txt: "Mover cajones desde " + ch("B", "") + " hacia " + ch("C", "") + " Registrar en la app la entrega.",
+    distinto: [{ rol: "Minorista", txt: "Mover cajones desde " + ch("B", "") + " hacia " + ch("F", "") + " Registrar en la app la entrega." }],
+    app: "Todos registran en la app la entrega" },
+  { quien: SIN_FAB,
+    txt: "Mover " + ch("D", "") + " hacia " + ch("E", "") + aclara("la del proveedor"),
+    distinto: [{ rol: "Fábrica", txt: "Esperar a que el resto de los roles terminen sus movimientos para avanzar al paso 6." }] },
+  { quien: SIN_FAB,
+    txt: "Tomar la carta que está bajo el tablero de <b>Compras</b>" + aclara("el de su propio rol") + " " + ch("OC", "Orden de compra") + " escribir pedido y colocarla en " + ch("D", "") + " Registrar en la app." +
+      porRol([["Minorista", "Minorista", "tablero de " + col("Compras del Minorista", "Minorista")],
+              ["Mayorista", "Mayorista", "tablero de " + col("Compras del Mayorista", "Mayorista")],
+              ["Distribuidor", "Distribuidor", "tablero de " + col("Compras del Distribuidor", "Distribuidor")]]),
+    distinto: [{ rol: "Fábrica", txt: "Tomar la carta que está bajo el tablero de " + col("Compras del Fabricante", "Fábrica") + " " + ch("OC", "Orden de<br>producción") + " escribir pedido y colocarla en " + ch("D", "", "Orden de<br>producción") + " Registrar en la app." }],
+    app: "Todos registran en la app el pedido" }
+];
+function htmlInstrFac(n) {
+  var x = INSTR[n - 1];
+  var h = '<div class="instr-fac">';
+  h += '<div class="bloque-todos"><p class="quien">👥 ' + x.quien + '</p>' + x.txt + '</div>';
+  (x.distinto || []).forEach(function (d) {
+    var c = ROLES[d.rol].color, nombre = d.rol === "Fábrica" ? "FABRICANTE" : d.rol.toUpperCase();
+    h += '<div class="bloque-distinto" style="border-color:' + c + '"><p class="quien" style="background:' + c + '">⚠ DISTINTO · SOLO EL ' + nombre + '</p>' + d.txt + '</div>';
+  });
+  if (x.app) h += '<span class="en-app">📱 ' + x.app + '</span>';
+  return h + '</div>';
+}
+var ROLES = {
+  "Minorista":    { corto: "Min", color: "#78BE20", texto: "#ffffff" },
+  "Mayorista":    { corto: "May", color: "#006C67", texto: "#ffffff" },
+  "Distribuidor": { corto: "Dis", color: "#A8007C", texto: "#ffffff" },
+  "Fábrica":      { corto: "Fáb", color: "#624976", texto: "#ffffff" }
+};
+var CLAVE = null, est = null, desfase = 0, ocupado = false;
+
+function $(id) { return document.getElementById(id); }
+// Dirección del Apps Script (la misma de siempre, termina en /exec)
+var API_URL = "https://script.google.com/macros/s/AKfycbyFQbM01T28lywsRapijTMtAMwpuYr7H_iyERh4Goat68o32hZEIxLWSp5TOTIx7lfyPw/exec";
+// Dentro de Apps Script se usa google.script.run; desde GitHub Pages, la API por POST
+var EN_APPS_SCRIPT = typeof google !== "undefined" && google.script && google.script.run;
+
+function servidor(fn) {
+  var args = Array.prototype.slice.call(arguments, 1);
+  if (EN_APPS_SCRIPT) {
+    return new Promise(function (ok, mal) {
+      var run = google.script.run.withSuccessHandler(ok).withFailureHandler(mal);
+      run[fn].apply(run, args);
+    });
+  }
+  return fetch(API_URL, { method: "POST", body: JSON.stringify({ fn: fn, args: args }), credentials: "omit", redirect: "follow" })
+    .then(function (r) {
+      if (!r.ok) throw new Error("No hay conexión con el servidor. Probá de nuevo.");
+      return r;
+    }, function () { throw new Error("No hay conexión con el servidor. Probá de nuevo."); })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d.error) throw new Error(d.error);
+      return d.ok;
+    });
+}
+
+function arrancar(clave) {
+  CLAVE = clave || "";
+  actualizar();
+  setInterval(actualizar, 4000);
+  setInterval(tic, 1000);
+}
+window.onload = function () {
+  // La clave viene en el link (?f=CLAVE); no está escrita en este archivo
+  if (!EN_APPS_SCRIPT) { arrancar(new URLSearchParams(location.search).get("f")); return; }
+  google.script.url.getLocation(function (loc) { arrancar(loc && loc.parameter && loc.parameter.f); });
+};
+
+function actualizar() {
+  if (ocupado) return;
+  servidor("panelEstado", CLAVE).then(recibir).catch(function (e) {
+    if (est && e.message.indexOf("Clave") === -1) return; // se reintenta en el próximo ciclo
+    $("cont").innerHTML = '<div class="cargando">' + e.message + '</div>';
+  });
+}
+
+function recibir(e) {
+  est = e;
+  desfase = Date.now() - e.ahora;
+  dibujar();
+}
+
+function accion(tipo, valor) {
+  if (ocupado) return;
+  ocupado = true;
+  document.querySelectorAll("button").forEach(function (b) { b.disabled = true; });
+  servidor("panelAccion", CLAVE, tipo, valor, est.semana).then(function (e) {
+    ocupado = false; recibir(e);
+  }).catch(function (err) {
+    ocupado = false; dibujar();
+    $("err").textContent = err.message;
+  });
+}
+
+function pasarSemana() {
+  var faltan = faltantes();
+  if (faltan.length && !confirm("Falta registrar " + faltan.length + " pedido(s): " + faltan.join(", ") + ".\n\n¿Pasar a la semana " + (est.semana + 1) + " igual?")) return;
+  accion("semana", est.semana + 1);
+}
+
+function irPaso(n) {
+  if (n === est.paso) return;
+  accion("paso", n);
+}
+
+function faltantes(mapa) {
+  mapa = mapa || est.enviados;
+  var f = [];
+  est.grupos.forEach(function (g, i) {
+    est.roles.forEach(function (r) {
+      var k = g + "|" + r;
+      if (est.conectados[k] && !mapa[k]) f.push("Mesa " + (i + 1) + " " + r);
+    });
+  });
+  return f;
+}
+
+function tic() {
+  if (!est || !$("reloj")) return;
+  var seg = Math.max(0, Math.floor((Date.now() - desfase - est.inicioPaso) / 1000));
+  $("reloj").textContent = String(Math.floor(seg / 60)).padStart(2, "0") + ":" + String(seg % 60).padStart(2, "0");
+}
+
+function dibujar() {
+  $("pill").textContent = est.semana > 0 ? "Semana " + est.semana : "Sin empezar";
+  var h = "";
+
+  if (est.semana === 0) {
+    var opc = "";
+    for (var m = 1; m <= est.maxMesas; m++) opc += '<button class="mesa-opc' + (m === est.mesas ? ' sel' : '') + '" onclick="accion(\'mesas\', ' + m + ')">' + m + '</button>';
+    h += '<div class="inicio"><h2>El juego no empezó</h2><p>Elegí cuántas mesas juegan. Cuando todos hayan escaneado su QR, habilitá la semana 1.</p>' +
+      '<div class="mesas"><p class="lbl">Mesas en juego</p><div class="opciones" style="grid-template-columns:repeat(' + est.maxMesas + ',1fr)">' + opc + '</div>' +
+      '<p class="ayuda">' + (est.mesas ? 'Se usan los tableros de las mesas 1 a ' + est.mesas + '. Se puede cambiar hasta empezar la semana 1.' : 'Todavía no elegiste la cantidad de mesas.') + '</p></div>' +
+      '<button class="btn verde" onclick="accion(\'semana\', 1)"' + (est.mesas ? '' : ' disabled') + '>' + (est.mesas ? 'Empezar semana 1' : 'Elegí cuántas mesas juegan') + '</button><p class="error" id="err"></p></div>';
+  } else {
+    h += '<div class="reloj"><span class="t" id="reloj">00:00</span><span class="lbl">en el paso ' + est.paso + '<br>' + PASOS[est.paso - 1] + '</span></div>';
+    h += '<p class="titulo">Pasos de la semana ' + est.semana + '<span class="der">Tocá uno para ir directo</span></p><div class="pasos">';
+    PASOS.forEach(function (nombre, i) {
+      var n = i + 1, cls = n < est.paso ? "hecho" : (n === est.paso ? "actual" : "");
+      h += '<button class="paso ' + cls + '" onclick="irPaso(' + n + ')"><span class="n">' + (n < est.paso ? "✓" : n) + '</span>' + nombre +
+        (n === est.paso ? '<span class="ahora">LO VEN AHORA</span>' : '') + '</button>' + (n === est.paso ? htmlInstrFac(n) : '');
+    });
+    h += '</div>';
+    if (est.paso < 6) {
+      if (est.paso >= 4) {
+        var fe = faltantes(est.entregas || {});
+        h += fe.length
+          ? '<div class="nota amarilla">Falta registrar la entrega: ' + fe.join(", ") + '</div>'
+          : '<div class="nota">Todos registraron la entrega.</div>';
+      }
+      h += '<div class="botones"><button class="btn-borde" onclick="irPaso(' + Math.max(1, est.paso - 1) + ')"' + (est.paso === 1 ? ' disabled' : '') + '>← Atrás</button>' +
+        '<button class="btn" onclick="irPaso(' + (est.paso + 1) + ')">Siguiente paso →</button></div>';
+    } else {
+      var f = faltantes();
+      h += f.length
+        ? '<div class="nota amarilla">Falta registrar el pedido: ' + f.join(", ") + '</div>'
+        : '<div class="nota">Todos registraron el pedido de la semana ' + est.semana + '.</div>';
+      h += '<div class="botones"><button class="btn-borde" onclick="irPaso(5)">← Atrás</button>' +
+        '<button class="btn verde" onclick="pasarSemana()">Pasar a la semana ' + (est.semana + 1) + '</button></div>';
+    }
+    h += '<p class="error" id="err"></p>';
+  }
+
+  // Registros por mesa y rol: ✓ = entrega (paso 4), ✓✓ = entrega y pedido (paso 6)
+  var ent = est.entregas || {}, total = 0, nEnt = 0, nPed = 0;
+  h += '<div class="sep"></div>';
+  var g = '<div class="grilla"><span></span>';
+  est.roles.forEach(function (r) { g += '<span class="hdr" style="color:' + ROLES[r].color + '">' + ROLES[r].corto + '</span>'; });
+  est.grupos.forEach(function (grupo, i) {
+    g += '<span>Mesa ' + (i + 1) + '</span>';
+    est.roles.forEach(function (r) {
+      var k = grupo + "|" + r, c = ROLES[r];
+      if (est.conectados[k] || ent[k]) total++;
+      if (est.enviados[k]) { nEnt++; nPed++; g += '<span class="celda" style="background:' + c.color + ';color:' + c.texto + '">✓✓</span>'; }
+      else if (ent[k]) { nEnt++; g += '<span class="celda" style="background:' + c.color + '33;color:' + c.color + ';border:2px solid ' + c.color + '">✓</span>'; }
+      else if (est.conectados[k]) g += '<span class="celda conectado" style="border-color:' + c.color + '"></span>';
+      else g += '<span class="celda vacia">–</span>';
+    });
+  });
+  g += '</div>';
+  h += '<p class="titulo">' + (est.semana > 0 ? "Semana " + est.semana : "Jugadores conectados") +
+    '<span class="der">' + (est.semana > 0 ? "Entregas " + nEnt + "/" + total + " · Pedidos " + nPed + "/" + total : total + (total === 1 ? " celular" : " celulares")) + '</span></p>' + g;
+  h += est.semana > 0
+    ? '<div class="leyenda"><span><i class="ley" style="background:#33415533;border:2px solid #334155;color:#334155">✓</i>Entrega (paso 4)</span>' +
+      '<span><i class="ley" style="background:#334155;color:#fff">✓✓</i>Entrega y pedido (paso 6)</span>' +
+      '<span><i style="border:2.5px solid #334e68"></i>Sin registrar</span><span><i style="border:2px dashed #cbd2d9"></i>Sin celular</span></div>'
+    : '<div class="leyenda"><span><i style="border:2.5px solid #334e68"></i>Conectado</span><span><i style="border:2px dashed #cbd2d9"></i>Sin celular</span></div>';
+
+  $("cont").innerHTML = h;
+  tic();
+}
+</script>
+</body>
+</html>

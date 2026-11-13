@@ -362,45 +362,49 @@ function pasosChecklist(rol, deuda) {
 //   D = Orden de compra entregada, E = Orden de compra por llegar, OC = Orden de compra
 //  El segundo valor es el rol duenio de la tarjeta (define su color).
 // =====================================================================
+var COLOR_CLIENTE = "#8C8C8C";
+// Copiadas del tablero final. tab(...) = nombre de un tablero en negrita y con el color del rol
+function tab(nombre, rol) {
+  var c = rol === "Cliente" ? COLOR_CLIENTE : ROLES[rol].color;
+  return '<b style="color:' + c + '">' + nombre + '</b>';
+}
 var INSTRUCCIONES = {
   // Todos los roles tienen 6 pasos, iguales a los pasos del facilitador
   "Minorista": [
-    ["Mover", ["A", "Minorista"], "hacia", ["B", "Minorista"]],
+    ["Mover cajones desde", ["A", "Minorista"], "hacia", ["B", "Minorista"]],
     ["Esperar a que el resto de los roles terminen sus movimientos para avanzar al paso 3."],
-    ["Mirar y recordar", ["D", "Cliente", "Orden de compra"], "Colocarla con el dorso hacia arriba debajo de la parte superior del tablero de <b>Demanda del Cliente</b>."],
-    ["Decidir cuánto entregar y mover de", ["B", "Minorista"], "hacia", ["F", "Cliente"], "Registrar en la app la entrega."],
+    ["Mirar", ["D", "Cliente", "Orden de compra"], "Colocarla con el dorso hacia arriba debajo de la parte superior del tablero de " + tab("Demanda del Cliente", "Cliente") + ". Decidir cuántos cajones entregar."],
+    ["Mover cajones desde", ["B", "Minorista"], "hacia", ["F", "Cliente"], "Registrar en la app la entrega."],
     ["Mover", ["D", "Minorista"], "hacia", ["E", "Mayorista"]],
-    ["Agarrar la carta que está bajo el tablero de Compras y realizar", ["OC", "Minorista", null, ["Minorista", "Mayorista"]], "Colocarla en", ["D", "Minorista"], "Registrar en la app."]
+    ["Tomar la carta que está bajo el tablero de " + tab("Compras del Minorista", "Minorista"), ["OC", "Minorista", null, ["Minorista", "Mayorista"]], "escribir pedido y colocarla en", ["D", "Minorista"], "Registrar en la app."]
   ],
   "Mayorista": [
-    ["Mover", ["A", "Mayorista"], "hacia", ["B", "Mayorista"]],
-    ["Mover", ["C", "Mayorista"], "hacia", ["A", "Minorista"]],
-    ["Mirar y recordar", ["E", "Mayorista"], "Colocarla con el dorso hacia arriba debajo de la parte superior del tablero de <b>Compras del Minorista</b>."],
-    ["Decidir cuánto entregar y mover de", ["B", "Mayorista"], "hacia", ["C", "Mayorista"], "Registrar en la app la entrega."],
+    ["Mover cajones desde", ["A", "Mayorista"], "hacia", ["B", "Mayorista"]],
+    ["Mover cajones desde", ["C", "Mayorista"], "hacia", ["A", "Minorista"]],
+    ["Mirar", ["E", "Mayorista"], "y colocarla con el dorso hacia arriba debajo de la parte superior del tablero de " + tab("Compras del Minorista", "Minorista") + ". Decidir cuántos cajones entregar."],
+    ["Mover cajones desde", ["B", "Mayorista"], "hacia", ["C", "Mayorista"], "Registrar en la app la entrega."],
     ["Mover", ["D", "Mayorista"], "hacia", ["E", "Distribuidor"]],
-    ["Agarrar la carta que está bajo el tablero de Compras y realizar", ["OC", "Mayorista", null, ["Mayorista", "Distribuidor"]], "Colocarla en", ["D", "Mayorista"], "Registrar en la app."]
+    ["Tomar la carta que está bajo el tablero de " + tab("Compras del Mayorista", "Mayorista"), ["OC", "Mayorista", null, ["Mayorista", "Distribuidor"]], "escribir pedido y colocarla en", ["D", "Mayorista"], "Registrar en la app."]
   ],
   "Distribuidor": [
-    ["Mover", ["A", "Distribuidor"], "hacia", ["B", "Distribuidor"]],
-    ["Mover", ["C", "Distribuidor"], "hacia", ["A", "Mayorista"]],
-    ["Mirar y recordar", ["E", "Distribuidor"], "Colocarla con el dorso hacia arriba debajo de la parte superior del tablero de <b>Compras del Mayorista</b>."],
-    ["Decidir cuánto entregar y mover de", ["B", "Distribuidor"], "hacia", ["C", "Mayorista"], "Registrar en la app la entrega."],
+    ["Mover cajones desde", ["A", "Distribuidor"], "hacia", ["B", "Distribuidor"]],
+    ["Mover cajones desde", ["C", "Distribuidor"], "hacia", ["A", "Mayorista"]],
+    ["Mirar", ["E", "Distribuidor"], "y colocarla con el dorso hacia arriba debajo de la parte superior del tablero de " + tab("Compras del Mayorista", "Mayorista") + ". Decidir cuántos cajones entregar."],
+    ["Mover cajones desde", ["B", "Distribuidor"], "hacia", ["C", "Distribuidor"], "Registrar en la app la entrega."],
     ["Mover", ["D", "Distribuidor"], "hacia", ["E", "Fábrica"]],
-    ["Agarrar la carta que está bajo el tablero de Compras y realizar", ["OC", "Distribuidor", null, ["Distribuidor", "Fábrica"]], "Colocarla en", ["D", "Distribuidor"], "Registrar en la app."]
+    ["Tomar la carta que está bajo el tablero de " + tab("Compras del Distribuidor", "Distribuidor"), ["OC", "Distribuidor", null, ["Distribuidor", "Fábrica"]], "escribir pedido y colocarla en", ["D", "Distribuidor"], "Registrar en la app."]
   ],
   "Fábrica": [
-    ["Mover", ["A", "Fábrica", "Productos<br>terminados"], "hacia", ["B", "Fábrica"]],
-    ["Mover", ["C", "Fábrica"], "hacia", ["A", "Distribuidor"]],
-    ["Mirar y recordar", ["E", "Fábrica"], "Colocarla con el dorso hacia arriba debajo de la parte superior del tablero de <b>Compras del Distribuidor</b>."],
-    ["Decidir cuánto entregar y mover de", ["B", "Fábrica"], "hacia", ["C", "Distribuidor"], "Registrar en la app la entrega."],
+    ["Mover cajones desde", ["A", "Fábrica", "Productos<br>terminados"], "hacia", ["B", "Fábrica"], "y mover cajones desde", ["C", "Cliente"], "hacia", ["A", "Fábrica", "Productos<br>terminados"]],
+    ["Mover cajones desde", ["C", "Fábrica"], "hacia", ["A", "Distribuidor"]],
+    ["Mirar", ["E", "Fábrica"], "y colocarla con el dorso hacia arriba debajo de la parte superior del tablero de " + tab("Compras del Distribuidor", "Distribuidor") + ". Decidir cuántos cajones entregar."],
+    ["Mover cajones desde", ["B", "Fábrica"], "hacia", ["C", "Fábrica"], "Registrar en la app la entrega."],
     ["Esperar a que el resto de los roles terminen sus movimientos para avanzar al paso 6."],
-    ["Agarrar la carta que está bajo el tablero de Compras y realizar", ["OC", "Fábrica", "Orden de<br>producción", ["Fábrica"]], "Colocarla en", ["D", "Fábrica", "Orden de<br>producción"], "Registrar en la app."]
+    ["Tomar la carta que está bajo el tablero de " + tab("Compras del Fabricante", "Fábrica"), ["OC", "Fábrica", "Orden de<br>producción", ["Fábrica"]], "escribir pedido y colocarla en", ["D", "Fábrica", "Orden de<br>producción"], "Registrar en la app."]
   ]
 };
 
-// Ya no hace falta traducir pasos: todos los roles siguen los 6 pasos del facilitador
 var PASO_LOCAL = {};
-var COLOR_CLIENTE = "#8C8C8C";
 function pasoLocal(rol, pasoGlobal) {
   return PASO_LOCAL[rol] ? PASO_LOCAL[rol][pasoGlobal - 1] : pasoGlobal;
 }
@@ -419,7 +423,7 @@ var TARJETAS = {
   C: { tipo: "llena", texto: "Entregado a<br>transporte", icono: "camion" },
   D: { tipo: "crema", texto: "Orden de compra<br>entregada", icono: "sobre" },
   E: { tipo: "crema", texto: "Orden de compra<br>por llegar", icono: "sobre" },
-  F: { tipo: "llena", texto: "Entrega al<br>cliente", icono: "monedas" }
+  F: { tipo: "llena", texto: "Entrega<br>al cliente", icono: "monedas" }
 };
 
 // Nombre del rol como figura en el tablero (la fábrica aparece como "Fabricante")
