@@ -85,7 +85,7 @@
   .nota.amarilla { background: var(--amarillo); color: var(--amarillo-texto); }
   .sep { height: 2px; background: var(--borde); margin: 22px 0 18px; }
 
-  .grilla { display: grid; grid-template-columns: 64px repeat(4, 1fr); gap: 6px; align-items: center; font-weight: 700; font-size: .85rem; }
+  .grilla { display: grid; grid-template-columns: minmax(64px, 28%) repeat(4, 1fr); gap: 6px; align-items: center; font-weight: 700; font-size: .85rem; }
   .grilla .hdr { text-align: center; font-size: .78rem; font-weight: 900; }
   .celda { height: 30px; border-radius: 8px; display: grid; place-content: center; font-weight: 900; font-size: .9rem; }
   .celda.vacia { background: var(--gris); border: 2px dashed var(--campo); color: var(--texto-3); }
@@ -119,8 +119,21 @@
   .quien-termino { margin: 0 0 14px 40px; }
   .quien-termino .tt { font-size: .74rem; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; color: var(--texto-2); margin: 0 0 6px; display: flex; }
   .quien-termino .tt span { margin-left: auto; color: var(--texto); }
-  .quien-termino .fila { display: grid; grid-template-columns: 52px repeat(4, 1fr); gap: 5px; align-items: center; margin-bottom: 5px; font-size: .8rem; font-weight: 700; }
+  .quien-termino .fila { display: grid; grid-template-columns: minmax(52px, 28%) repeat(4, 1fr); gap: 5px; align-items: center; margin-bottom: 5px; font-size: .8rem; font-weight: 700; }
   .quien-termino .c { height: 26px; border-radius: 7px; display: grid; place-content: center; font-weight: 900; font-size: .8rem; }
+  .nombres { background: var(--gris); border-radius: var(--radio); padding: 14px; margin: 0 0 18px; }
+  .nombres .lbl { font-weight: 700; margin: 0 0 10px; }
+  .modo-opc { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .modo-opc button { border: 2px solid var(--campo); background: #fff; border-radius: 12px; padding: 11px 6px; font-size: .95rem; font-weight: 900; }
+  .modo-opc button.sel { background: var(--texto); border-color: var(--texto); color: #fff; }
+  .campo-nombre { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
+  .campo-nombre span { flex: none; width: 58px; font-weight: 900; font-size: .9rem; color: var(--texto-2); }
+  .campo-nombre input { flex: 1; min-width: 0; border: 2px solid var(--campo); border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 1rem; background: #fff; }
+  .campo-nombre input:focus { outline: none; border-color: var(--azul); }
+  .nombres .estado { margin: 8px 0 0; font-size: .88rem; font-weight: 700; }
+  .nombres .estado.ok { color: var(--verde); }
+  .nombres .estado.falta { color: var(--amarillo-texto); }
+  .lbl-mesa { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .tarea-fac { display: flex; gap: 10px; align-items: flex-start; background: #FFF1D6; border-left: 6px solid #F29F05; border-radius: 10px; padding: 10px 12px; margin: 0 0 12px; color: #5c3b00; font-size: .95rem; line-height: 1.4; }
   .tarea-fac .ic { font-size: 1.3rem; line-height: 1; }
   .tarea-fac .tt { display: block; font-size: .72rem; font-weight: 900; letter-spacing: .06em; color: #b26b00; margin-bottom: 2px; }
@@ -233,7 +246,7 @@ function htmlQuienTermino(n) {
   est.roles.forEach(function (r) { filas += '<span style="text-align:center;font-weight:900;color:' + ROLES[r].color + '">' + ROLES[r].corto + '</span>'; });
   filas += '</div>';
   est.grupos.forEach(function (g, i) {
-    filas += '<div class="fila"><span>Mesa ' + (i + 1) + '</span>';
+    filas += '<div class="fila"><span class="lbl-mesa">' + esc(nombreMesa(i)) + '</span>';
     est.roles.forEach(function (r) {
       var k = g + "|" + r, c = ROLES[r].color;
       if (!est.conectados[k]) { filas += '<span class="c celda vacia">–</span>'; return; }
@@ -321,7 +334,7 @@ function actualizar() {
 function recibir(e) {
   var p = e.partida || "";
   if (partidaChecks === null) cargarChecks(p);
-  else if (p !== partidaChecks || (est && est.semana > 0 && e.semana === 0)) { cargarChecks(p); guardarChecks(); pagina = "setup"; }
+  else if (p !== partidaChecks || (est && est.semana > 0 && e.semana === 0)) { cargarChecks(p); guardarChecks(); pagina = "setup"; modoElegido = null; borrador = null; }
   est = e;
   desfase = Date.now() - e.ahora;
   dibujar();
@@ -332,6 +345,10 @@ function accion(tipo, valor) {
   var semanaVista = est.semana;
   if (tipo === "mesas") {
     est.mesas = valor;
+  } else if (tipo === "nombres") {
+    est.modoNombres = valor.modo;
+    est.nombres = valor.modo === "personalizados" ? valor.nombres.concat((est.nombres || []).slice(valor.nombres.length)) : [];
+    if (valor.modo === "numeros") borrador = null;
   } else if (tipo === "paso") {
     est.paso = valor; est.inicioPaso = Date.now() - desfase;
   } else if (tipo === "semana") {
@@ -369,7 +386,7 @@ function faltantes(mapa) {
   est.grupos.forEach(function (g, i) {
     est.roles.forEach(function (r) {
       var k = g + "|" + r;
-      if (est.conectados[k] && !mapa[k]) f.push("Mesa " + (i + 1) + " " + r);
+      if (est.conectados[k] && !mapa[k]) f.push(nombreMesa(i) + " " + r);
     });
   });
   return f;
@@ -399,6 +416,76 @@ var CHECKLIST = [
   'Colocar las órdenes iniciales: una orden con el número <b>4</b> escrito, boca abajo, en cada casillero <b>“Orden de compra entregada”</b> y en cada <b>“Orden de compra por llegar”</b> (también en la <b>Orden de producción</b> del Fabricante).'
 ];
 var pagina = "setup";
+// ----- Nombres de los equipos -----
+function esc(t) { return String(t).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+function nombreMesa(i) {
+  var n = est && est.modoNombres === "personalizados" && est.nombres && est.nombres[i];
+  return n || "Mesa " + (i + 1);
+}
+var modoElegido = null, borrador = null, msgNombres = "";
+function modoActual() { return modoElegido || (est && est.modoNombres) || ""; }
+function elegirModo(m) {
+  modoElegido = m;
+  if (m === "numeros") accion("nombres", { modo: "numeros" });
+  else dibujar();
+}
+function escribirNombre(i, v) { borrador[i] = v; msgNombres = ""; var e = $("errNombres"); if (e) e.textContent = ""; actualizarEstadoNombres(); }
+function nombresGuardados() {
+  if (!est.mesas) return false;
+  if (est.modoNombres === "numeros") return modoActual() === "numeros";
+  if (est.modoNombres !== "personalizados" || modoActual() !== "personalizados") return false;
+  for (var i = 0; i < est.mesas; i++) {
+    var srv = (est.nombres || [])[i] || "";
+    if (!srv || (borrador && (borrador[i] || "").trim() !== srv)) return false;
+  }
+  return true;
+}
+function confirmarNombres() {
+  var lista = borrador.slice(0, est.mesas).map(function (x) { return (x || "").trim(); });
+  msgNombres = "";
+  for (var i = 0; i < lista.length; i++) if (!lista[i]) { mostrarMsgNombres("Falta el nombre de la mesa " + (i + 1) + "."); return; }
+  var vistos = {};
+  for (var j = 0; j < lista.length; j++) {
+    var k = lista[j].toLowerCase();
+    if (vistos[k]) { mostrarMsgNombres("Hay dos equipos con el nombre \"" + lista[j] + "\". Cada nombre tiene que ser distinto."); return; }
+    vistos[k] = true;
+  }
+  borrador = lista.concat(borrador.slice(est.mesas));
+  accion("nombres", { modo: "personalizados", nombres: lista });
+}
+function mostrarMsgNombres(t) { msgNombres = t; var e = $("errNombres"); if (e) e.textContent = t; }
+function actualizarEstadoNombres() {
+  var e = $("estadoNombres"); if (!e) return;
+  var ok = nombresGuardados();
+  e.className = "estado " + (ok ? "ok" : "falta");
+  e.textContent = ok ? "✓ Nombres guardados" : "Escribí todos los nombres y tocá Confirmar.";
+  var b = $("btnSig");
+  if (b) { var listo = checks.every(Boolean) && est.mesas && ok; b.disabled = !listo; b.textContent = textoSiguiente(); }
+}
+function textoSiguiente() {
+  if (!est.mesas) return "Elegí cuántas mesas juegan";
+  if (!nombresGuardados()) return "Confirmá los nombres de los equipos";
+  if (!checks.every(Boolean)) return "Tildá todos los puntos para seguir";
+  return "Siguiente →";
+}
+function htmlNombres() {
+  if (!est.mesas) return "";
+  var m = modoActual();
+  if (!borrador) borrador = (est.nombres || []).slice();
+  var h = '<div class="nombres"><p class="lbl">¿Cómo se llaman los equipos?</p><div class="modo-opc">' +
+    '<button class="' + (m === "numeros" ? "sel" : "") + '" onclick="elegirModo(\'numeros\')">Grupo 1, 2, 3…</button>' +
+    '<button class="' + (m === "personalizados" ? "sel" : "") + '" onclick="elegirModo(\'personalizados\')">Nombres propios</button></div>';
+  if (m === "personalizados") {
+    for (var i = 0; i < est.mesas; i++) {
+      h += '<label class="campo-nombre"><span>Mesa ' + (i + 1) + '</span><input class="in-nombre" maxlength="30" placeholder="Nombre de la empresa" value="' + esc(borrador[i] || "") + '" oninput="escribirNombre(' + i + ', this.value)" onblur="setTimeout(dibujarSiLibre, 50)"></label>';
+    }
+    h += '<button class="btn" style="padding:12px;font-size:1rem" onclick="confirmarNombres()">Confirmar nombres</button>' +
+      '<p class="error" id="errNombres" style="margin:6px 0 0">' + esc(msgNombres) + '</p>';
+  }
+  if (m) h += '<p class="estado" id="estadoNombres"></p>';
+  return h + '</div>';
+}
+function dibujarSiLibre() { var a = document.activeElement; if (!(a && a.classList && a.classList.contains("in-nombre"))) dibujar(); }
 // Los tildes se guardan junto con el identificador de la partida: al reiniciar desde la planilla cambia y se borran
 var checks = CHECKLIST.map(function () { return false; }), partidaChecks = null;
 function cargarChecks(partida) {
@@ -415,17 +502,17 @@ function irPagina(p) { pagina = p; dibujar(); window.scrollTo(0, 0); }
 
 function htmlPreparacion() {
   if (pagina === "setup") {
-    var listo = checks.every(Boolean) && est.mesas;
+    var listo = checks.every(Boolean) && est.mesas && nombresGuardados();
     var opc = "";
     for (var m = 1; m <= est.maxMesas; m++) opc += '<button class="mesa-opc' + (m === est.mesas ? ' sel' : '') + '" onclick="accion(\'mesas\', ' + m + ')">' + m + '</button>';
     var h = '<div class="pre"><p class="etapa">Paso 1 de 2 · Preparación</p><h2>Preparar el juego</h2><p>Completá todo antes de seguir.</p>';
     h += '<div class="mesas"><p class="lbl">¿Cuántas mesas juegan?</p><div class="opciones" style="grid-template-columns:repeat(' + est.maxMesas + ',1fr)">' + opc + '</div>' +
       '<p class="ayuda">' + (est.mesas ? 'Se usan los tableros de las mesas 1 a ' + est.mesas + '.' : 'Todavía no elegiste la cantidad de mesas.') + '</p></div>';
+    h += htmlNombres();
     CHECKLIST.forEach(function (txt, i) {
       h += '<button class="check' + (checks[i] ? ' ok' : '') + '" onclick="tildar(' + i + ')"><span class="caja">' + (checks[i] ? '✓' : '') + '</span><span>' + txt + '</span></button>';
     });
-    h += '<button class="btn" onclick="irPagina(\'conectados\')"' + (listo ? '' : ' disabled') + '>' +
-      (listo ? 'Siguiente →' : (est.mesas ? 'Tildá todos los puntos para seguir' : 'Elegí cuántas mesas juegan')) + '</button><p class="error" id="err"></p></div>';
+    h += '<button class="btn" id="btnSig" onclick="irPagina(\'conectados\')"' + (listo ? '' : ' disabled') + '>' + textoSiguiente() + '</button><p class="error" id="err"></p></div>';
     return h;
   }
   return '<div class="pre"><p class="etapa">Paso 2 de 2 · Jugadores</p><h2>Escanear los QR</h2><p>Pedí a cada jugador que escanee el QR de su tablero. Abajo ves quién ya se conectó.</p>' +
@@ -434,6 +521,8 @@ function htmlPreparacion() {
 }
 
 function dibujar() {
+  var act = document.activeElement;
+  if (act && act.classList && act.classList.contains("in-nombre")) { actualizarEstadoNombres(); return; }
   $("pill").textContent = est.semana > 0 ? "Semana " + est.semana : "Sin empezar";
   var h = "";
 
@@ -468,14 +557,14 @@ function dibujar() {
     h += '<p class="error" id="err"></p>';
   }
 
-  if (est.semana === 0 && pagina === "setup") { $("cont").innerHTML = h; return; }
+  if (est.semana === 0 && pagina === "setup") { $("cont").innerHTML = h; actualizarEstadoNombres(); return; }
   // Registros por mesa y rol: ✓ = entrega (paso 4), ✓✓ = entrega y pedido (paso 6)
   var ent = est.entregas || {}, total = 0, nEnt = 0, nPed = 0;
   h += '<div class="sep"></div>';
   var g = '<div class="grilla"><span></span>';
   est.roles.forEach(function (r) { g += '<span class="hdr" style="color:' + ROLES[r].color + '">' + ROLES[r].corto + '</span>'; });
   est.grupos.forEach(function (grupo, i) {
-    g += '<span>Mesa ' + (i + 1) + '</span>';
+    g += '<span class="lbl-mesa">' + esc(nombreMesa(i)) + '</span>';
     est.roles.forEach(function (r) {
       var k = grupo + "|" + r, c = ROLES[r];
       if (est.conectados[k] || ent[k]) total++;

@@ -647,7 +647,7 @@ function tomarLugarQR(qr) {
   mostrarPantalla("pCargando");
   var disp = idDispositivo();
   servidor("tomarLugarQR", qr.g, qr.r, disp).then(function (d) {
-    yo = { grupo: d.grupo, rol: d.rol, dispositivo: disp, g: qr.g, r: qr.r };
+    yo = { grupo: d.grupo, nombre: d.nombre, rol: d.rol, dispositivo: disp, g: qr.g, r: qr.r };
     guardarLocal(CLAVE + "_yo", { grupo: yo.grupo, rol: yo.rol, g: qr.g, r: qr.r });
     iniciarJuego(false);
   }).catch(function (err) {
@@ -662,7 +662,7 @@ function tomarLugarQR(qr) {
 function iniciarJuego(otroQR) {
   var aviso = $("avisoOtroQR");
   aviso.style.display = otroQR ? "block" : "none";
-  aviso.textContent = otroQR ? "Este celular ya está jugando como " + yo.rol + " en " + yo.grupo + ". Si es un error, avisale al facilitador." : "";
+  aviso.textContent = otroQR ? "Este celular ya está jugando como " + yo.rol + " en " + nombreEquipo() + ". Si es un error, avisale al facilitador." : "";
   aplicarColores(yo.rol);
   mostrarPantalla("pCargando");
   refrescarEstado().then(function (e) {
@@ -674,10 +674,13 @@ function iniciarJuego(otroQR) {
   });
 }
 
+// Nombre del equipo que eligió el grupo (o "Grupo N" si no eligieron)
+function nombreEquipo() { return (estado && estado.nombreEquipo) || (yo && yo.nombre) || (yo ? yo.grupo : ""); }
 function refrescarEstado() {
   return servidor("obtenerEstado", yo.grupo, yo.rol, yo.dispositivo).then(function (e) {
     if (!e.lugarValido) { lugarLiberado(); return null; }
     estado = e;
+    if ($("cabGrupo") && yo) $("cabGrupo").textContent = nombreEquipo();
     juego = { semana: e.semanaHabilitada, paso: e.paso, inicio: e.inicioPaso };
     if (e.ahora) desfase = Date.now() - e.ahora;
     return e;
@@ -709,7 +712,7 @@ function dibujarJuego() {
   var r = ROLES[yo.rol];
   $("cabDibujo").innerHTML = DIBUJOS[yo.rol];
   $("cabRol").textContent = yo.rol;
-  $("cabGrupo").textContent = yo.grupo;
+  $("cabGrupo").textContent = nombreEquipo();
   $("cabSemana").textContent = "Semana " + estado.semana;
 
   var deuda = estado.deuda;
