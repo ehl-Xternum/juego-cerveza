@@ -319,7 +319,9 @@ function actualizar() {
 }
 
 function recibir(e) {
-  if (est && est.semana > 0 && e.semana === 0) { checks = CHECKLIST.map(function () { return false; }); guardarChecks(); pagina = "setup"; }
+  var p = e.partida || "";
+  if (partidaChecks === null) cargarChecks(p);
+  else if (p !== partidaChecks || (est && est.semana > 0 && e.semana === 0)) { cargarChecks(p); guardarChecks(); pagina = "setup"; }
   est = e;
   desfase = Date.now() - e.ahora;
   dibujar();
@@ -397,9 +399,17 @@ var CHECKLIST = [
   'Colocar las órdenes iniciales: una orden con el número <b>4</b> escrito, boca abajo, en cada casillero <b>“Orden de compra entregada”</b> y en cada <b>“Orden de compra por llegar”</b> (también en la <b>Orden de producción</b> del Fabricante).'
 ];
 var pagina = "setup";
-var checks = leerChecks();
-function leerChecks() { try { var v = JSON.parse(localStorage.getItem("fac_checks")); if (v && v.length === CHECKLIST.length) return v; } catch (e) {} return CHECKLIST.map(function () { return false; }); }
-function guardarChecks() { try { localStorage.setItem("fac_checks", JSON.stringify(checks)); } catch (e) {} }
+// Los tildes se guardan junto con el identificador de la partida: al reiniciar desde la planilla cambia y se borran
+var checks = CHECKLIST.map(function () { return false; }), partidaChecks = null;
+function cargarChecks(partida) {
+  partidaChecks = partida;
+  checks = CHECKLIST.map(function () { return false; });
+  try {
+    var v = JSON.parse(localStorage.getItem("fac_checks"));
+    if (v && v.partida === partida && v.checks && v.checks.length === CHECKLIST.length) checks = v.checks;
+  } catch (e) {}
+}
+function guardarChecks() { try { localStorage.setItem("fac_checks", JSON.stringify({ partida: partidaChecks, checks: checks })); } catch (e) {} }
 function tildar(i) { checks[i] = !checks[i]; guardarChecks(); dibujar(); }
 function irPagina(p) { pagina = p; dibujar(); window.scrollTo(0, 0); }
 
