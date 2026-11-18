@@ -41,6 +41,10 @@
   .reloj { display: flex; align-items: center; gap: 10px; background: var(--gris); border-radius: var(--radio); padding: 12px 14px; margin-bottom: 14px; }
   .reloj .t { font-size: 1.9rem; font-weight: 900; font-variant-numeric: tabular-nums; }
   .reloj .lbl { color: var(--texto-2); font-weight: 700; font-size: .9rem; line-height: 1.3; }
+  .reloj .t small { font-size: .9rem; font-weight: 700; color: var(--texto-2); }
+  .reloj.poco { background: #FFF1D6; }
+  .reloj.fin { background: #C70627; color: #fff; }
+  .reloj.fin .lbl, .reloj.fin .t small { color: #ffe1e5; }
 
   .pasos { margin-bottom: 14px; }
   .paso { width: 100%; display: flex; align-items: center; gap: 12px; border: none; background: none; padding: 9px 8px; border-radius: 12px; font-size: 1.05rem; font-weight: 700; color: var(--texto-3); text-align: left; }
@@ -102,6 +106,26 @@
   .inicio { text-align: center; padding: 30px 6px 10px; }
   .inicio h2 { font-size: 1.5rem; font-weight: 900; margin: 0 0 6px; }
   .inicio p { color: var(--texto-2); font-weight: 400; margin: 0 0 20px; }
+  .etapa { font-size: .78rem; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; color: var(--texto-2); margin: 0 0 4px; }
+  .pre { text-align: left; padding: 18px 2px 6px; }
+  .pre h2 { font-size: 1.45rem; font-weight: 900; margin: 0 0 6px; }
+  .pre > p { color: var(--texto-2); margin: 0 0 16px; }
+  .check { display: flex; gap: 12px; align-items: flex-start; width: 100%; text-align: left; background: #fff; border: 2px solid var(--borde); border-radius: var(--radio); padding: 13px 14px; margin: 0 0 10px; font-size: 1rem; line-height: 1.4; color: var(--texto); }
+  .check .caja { flex: none; width: 26px; height: 26px; border-radius: 8px; border: 2.5px solid var(--campo); display: grid; place-content: center; font-weight: 900; color: #fff; margin-top: 1px; }
+  .check.ok { border-color: var(--verde); background: var(--verde-suave); }
+  .check.ok .caja { background: var(--verde); border-color: var(--verde); }
+  .check b.alerta { color: var(--rojo); }
+  .check small { display: block; color: var(--texto-2); margin-top: 3px; font-size: .9rem; }
+  .quien-termino { margin: 0 0 14px 40px; }
+  .quien-termino .tt { font-size: .74rem; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; color: var(--texto-2); margin: 0 0 6px; display: flex; }
+  .quien-termino .tt span { margin-left: auto; color: var(--texto); }
+  .quien-termino .fila { display: grid; grid-template-columns: 52px repeat(4, 1fr); gap: 5px; align-items: center; margin-bottom: 5px; font-size: .8rem; font-weight: 700; }
+  .quien-termino .c { height: 26px; border-radius: 7px; display: grid; place-content: center; font-weight: 900; font-size: .8rem; }
+  .tarea-fac { display: flex; gap: 10px; align-items: flex-start; background: #FFF1D6; border-left: 6px solid #F29F05; border-radius: 10px; padding: 10px 12px; margin: 0 0 12px; color: #5c3b00; font-size: .95rem; line-height: 1.4; }
+  .tarea-fac .ic { font-size: 1.3rem; line-height: 1; }
+  .tarea-fac .tt { display: block; font-size: .72rem; font-weight: 900; letter-spacing: .06em; color: #b26b00; margin-bottom: 2px; }
+  .tarea-fac .t-rol { margin: 6px 0 0; }
+  .tarea-fac .con { display: inline-block; color: #fff; font-weight: 900; font-size: .72rem; letter-spacing: .04em; text-transform: uppercase; border-radius: 999px; padding: 2px 9px; margin-right: 6px; }
 </style>
 </head>
 <body>
@@ -141,6 +165,7 @@ function ch(letra, texto, propio) {
 // distinto: pasos donde el Minorista o el Fabricante hacen otra cosa
 var TODOS = "Todos los roles";
 var SIN_MIN = "Mayorista, Distribuidor y Fabricante";
+var SOLO_MAY_DIS = "Mayorista y Distribuidor";
 var SIN_FAB = "Minorista, Mayorista y Distribuidor";
 // Texto igual al tablero final. Las tarjetas van en gris porque cada rol las ve de su color;
 // lo que está en gris e itálica (aclara) o en "por-rol" es una ayuda para el facilitador, no está en el tablero.
@@ -152,12 +177,13 @@ function porRol(lista) {
 }
 var INSTR = [
   { quien: SIN_FAB,
-    txt: "Mover cajones desde " + ch("A", "") + " hacia " + ch("B", ""),
-    distinto: [{ rol: "Fábrica", txt: "Mover cajones desde " + ch("A", "", "Productos<br>terminados") + " hacia " + ch("B", "") +
-      " y mover cajones desde " + ch("C", "") + " hacia " + ch("A", "", "Productos<br>terminados") }] },
-  { quien: SIN_MIN,
-    txt: "Mover cajones desde " + ch("C", "") + " hacia " + ch("A", "") + aclara("la del cliente"),
-    distinto: [{ rol: "Minorista", txt: "Esperar a que el resto de los roles terminen sus movimientos para avanzar al paso 3." }] },
+    txt: "Mover todos los cajones desde " + ch("A", "") + " hacia " + ch("B", ""),
+    distinto: [{ rol: "Fábrica", txt: "Mover todos los cajones desde " + ch("A", "", "Productos<br>terminados") + " hacia " + ch("B", "") +
+      " y mover todos los cajones desde " + ch("C", "") + " hacia " + ch("A", "", "Productos<br>terminados") }] },
+  { quien: SOLO_MAY_DIS,
+    txt: "Mover todos los cajones desde " + ch("C", "") + " hacia " + ch("A", "") + aclara("la del cliente"),
+    distinto: [{ rol: "Minorista", txt: "Esperar a que el resto de los roles terminen sus movimientos para avanzar al paso 3." },
+               { rol: "Fábrica", txt: "Mover todos los cajones desde " + ch("C", "") + " hacia " + ch("A", "") + aclara("la del Distribuidor") + " Dejar la carta de <b>Orden de producción</b> con el dorso hacia arriba debajo de la parte superior del tablero de " + col("Compras del Fabricante", "Fábrica") + "." }] },
   { quien: SIN_MIN,
     txt: "Mirar " + ch("E", "") + " y colocarla con el dorso hacia arriba debajo de la parte superior del tablero de <b>Compras</b>" + aclara("el de su cliente") + ". Decidir cuántos cajones entregar." +
       porRol([["Mayorista", "Mayorista", "tablero de " + col("Compras del Minorista", "Minorista")],
@@ -165,8 +191,8 @@ var INSTR = [
               ["Fabricante", "Fábrica", "tablero de " + col("Compras del Distribuidor", "Distribuidor")]]),
     distinto: [{ rol: "Minorista", txt: "Mirar " + ch("D", "", "Orden de compra") + " Colocarla con el dorso hacia arriba debajo de la parte superior del tablero de " + col("Demanda del Cliente", "Cliente") + ". Decidir cuántos cajones entregar." }] },
   { quien: SIN_MIN,
-    txt: "Mover cajones desde " + ch("B", "") + " hacia " + ch("C", "") + " Registrar en la app la entrega.",
-    distinto: [{ rol: "Minorista", txt: "Mover cajones desde " + ch("B", "") + " hacia " + ch("F", "") + " Registrar en la app la entrega." }],
+    txt: "Mover cantidad de cajones elegida desde " + ch("B", "") + " hacia " + ch("C", "") + " Registrar en la app la entrega.",
+    distinto: [{ rol: "Minorista", txt: "Mover cantidad de cajones elegida desde " + ch("B", "") + " hacia " + ch("F", "") + " Registrar en la app la entrega." }],
     app: "Todos registran en la app la entrega" },
   { quien: SIN_FAB,
     txt: "Mover " + ch("D", "") + " hacia " + ch("E", "") + aclara("la del proveedor"),
@@ -179,9 +205,51 @@ var INSTR = [
     distinto: [{ rol: "Fábrica", txt: "Tomar la carta que está bajo el tablero de " + col("Compras del Fabricante", "Fábrica") + " " + ch("OC", "Orden de<br>producción") + " escribir pedido y colocarla en " + ch("D", "", "Orden de<br>producción") + " Registrar en la app." }],
     app: "Todos registran en la app el pedido" }
 ];
+// Lo que hace el facilitador en cada paso (además de leer la instrucción)
+// Lo que hace el facilitador en cada paso, separado por el rol con el que trabaja
+var TAREAS_FAC = {
+  3: [["Minorista", "Retirá los cajones que el Minorista dejó en <b>F · Entrega al cliente</b>."],
+      ["Fábrica", "Mirá la <b>D · Orden de producción</b> del Fabricante, colocá esa cantidad de cajones en su casillero gris <b>C · Entregado a transporte</b> y dejá la carta con el dorso hacia arriba debajo de la parte superior del tablero <b>Compras del Fabricante</b>."]],
+  6: [["Minorista", "Tomá la carta que está debajo del tablero <b>Demanda del Cliente</b>, hacé la mímica de escribir la orden de compra del cliente y colocala en <b>D · Orden de compra</b>."]]
+};
+function htmlTareaFac(n) {
+  var t = TAREAS_FAC[n];
+  if (!t) return '';
+  return '<div class="tarea-fac"><div><span class="tt">TU TAREA EN ESTE PASO</span>' + t.map(function (x) {
+    var nombre = x[0] === "Fábrica" ? "Fabricante" : x[0];
+    return '<p class="t-rol"><span class="con" style="background:' + ROLES_COLOR[x[0]] + '">Con el ' + nombre + '</span>' + x[1] + '</p>';
+  }).join('') + '</div></div>';
+}
+// Quién terminó el paso n: ✓ terminó · ⏸ su rol espera en este paso · vacío = falta · – sin celular
+function esperaEnPaso(rol, n) { return (rol === "Minorista" && n === 2) || (rol === "Fábrica" && n === 5); }
+function terminoPaso(k, rol, n) {
+  if (esperaEnPaso(rol, n)) return true;
+  if (n === 4) return !!(est.entregas || {})[k];
+  if (n === 6) return !!(est.enviados || {})[k];
+  return ((est.listos || {})[k] || []).indexOf(n) !== -1;
+}
+function htmlQuienTermino(n) {
+  var tot = 0, ok = 0, filas = '<div class="fila"><span></span>';
+  est.roles.forEach(function (r) { filas += '<span style="text-align:center;font-weight:900;color:' + ROLES[r].color + '">' + ROLES[r].corto + '</span>'; });
+  filas += '</div>';
+  est.grupos.forEach(function (g, i) {
+    filas += '<div class="fila"><span>Mesa ' + (i + 1) + '</span>';
+    est.roles.forEach(function (r) {
+      var k = g + "|" + r, c = ROLES[r].color;
+      if (!est.conectados[k]) { filas += '<span class="c celda vacia">–</span>'; return; }
+      tot++;
+      if (esperaEnPaso(r, n)) { ok++; filas += '<span class="c" style="background:' + c + '22;color:' + c + '" title="Espera">⏸</span>'; }
+      else if (terminoPaso(k, r, n)) { ok++; filas += '<span class="c" style="background:' + c + ';color:#fff">✓</span>'; }
+      else filas += '<span class="c" style="background:#fff;border:2.5px solid ' + c + '"></span>';
+    });
+    filas += '</div>';
+  });
+  return '<div class="quien-termino"><p class="tt">¿Quién terminó el paso ' + n + '?<span>' + ok + '/' + tot + '</span></p>' + filas +
+    '<div class="leyenda"><span><i class="ley" style="background:#334155;color:#fff">✓</i>Terminó</span><span><i style="border:2.5px solid #334e68"></i>Falta</span><span><i class="ley" style="background:#33415522;color:#334155">⏸</i>Espera</span></div></div>';
+}
 function htmlInstrFac(n) {
   var x = INSTR[n - 1];
-  var h = '<div class="instr-fac">';
+  var h = '<div class="instr-fac">' + htmlTareaFac(n);
   h += '<div class="bloque-todos"><p class="quien">👥 ' + x.quien + '</p>' + x.txt + '</div>';
   (x.distinto || []).forEach(function (d) {
     var c = ROLES[d.rol].color, nombre = d.rol === "Fábrica" ? "FABRICANTE" : d.rol.toUpperCase();
@@ -245,6 +313,7 @@ function actualizar() {
 }
 
 function recibir(e) {
+  if (est && est.semana > 0 && e.semana === 0) { checks = CHECKLIST.map(function () { return false; }); guardarChecks(); pagina = "setup"; }
   est = e;
   desfase = Date.now() - e.ahora;
   dibujar();
@@ -285,10 +354,54 @@ function faltantes(mapa) {
   return f;
 }
 
+// Cuenta regresiva de cada paso (segundos). Al llegar a 0 sólo se avisa: no se registra nada.
+var TIEMPO_PASO = { 1: 30, 2: 30, 3: 45, 4: 60, 5: 20, 6: 75 };
+function fmtTiempo(seg) { return Math.floor(seg / 60) + ":" + String(seg % 60).padStart(2, "0"); }
 function tic() {
   if (!est || !$("reloj")) return;
-  var seg = Math.max(0, Math.floor((Date.now() - desfase - est.inicioPaso) / 1000));
-  $("reloj").textContent = String(Math.floor(seg / 60)).padStart(2, "0") + ":" + String(seg % 60).padStart(2, "0");
+  var total = TIEMPO_PASO[est.paso] || 0;
+  var resta = Math.ceil(total - (Date.now() - desfase - est.inicioPaso) / 1000);
+  var caja = $("reloj").parentNode;
+  if (resta > 0) {
+    caja.className = "reloj" + (resta <= 10 ? " poco" : "");
+    $("reloj").innerHTML = fmtTiempo(resta) + ' <small>de ' + fmtTiempo(total) + '</small>';
+  } else {
+    caja.className = "reloj fin";
+    $("reloj").innerHTML = '¡Tiempo! <small>+' + fmtTiempo(-resta) + '</small>';
+  }
+}
+
+// ----- Antes de empezar: 1) Preparación  2) Jugadores conectados -----
+var CHECKLIST = [
+  'Repartir los tableros en cada mesa. <b class="alerta">¡Cuidado!</b> Cada tablero corresponde a una sola mesa: revisá que cada rol tenga el tablero de su mesa.',
+  'Colocar el inventario inicial: 4 cajones en cada depósito y 4 cajones en cada casillero de transporte.',
+  'Colocar las órdenes iniciales: una orden con el número <b>4</b> escrito, boca abajo, en cada casillero <b>“Orden de compra entregada”</b> y en cada <b>“Orden de compra por llegar”</b> (también en la <b>Orden de producción</b> del Fabricante).'
+];
+var pagina = "setup";
+var checks = leerChecks();
+function leerChecks() { try { var v = JSON.parse(localStorage.getItem("fac_checks")); if (v && v.length === CHECKLIST.length) return v; } catch (e) {} return CHECKLIST.map(function () { return false; }); }
+function guardarChecks() { try { localStorage.setItem("fac_checks", JSON.stringify(checks)); } catch (e) {} }
+function tildar(i) { checks[i] = !checks[i]; guardarChecks(); dibujar(); }
+function irPagina(p) { pagina = p; dibujar(); window.scrollTo(0, 0); }
+
+function htmlPreparacion() {
+  if (pagina === "setup") {
+    var listo = checks.every(Boolean) && est.mesas;
+    var opc = "";
+    for (var m = 1; m <= est.maxMesas; m++) opc += '<button class="mesa-opc' + (m === est.mesas ? ' sel' : '') + '" onclick="accion(\'mesas\', ' + m + ')">' + m + '</button>';
+    var h = '<div class="pre"><p class="etapa">Paso 1 de 2 · Preparación</p><h2>Preparar el juego</h2><p>Completá todo antes de seguir.</p>';
+    h += '<div class="mesas"><p class="lbl">¿Cuántas mesas juegan?</p><div class="opciones" style="grid-template-columns:repeat(' + est.maxMesas + ',1fr)">' + opc + '</div>' +
+      '<p class="ayuda">' + (est.mesas ? 'Se usan los tableros de las mesas 1 a ' + est.mesas + '.' : 'Todavía no elegiste la cantidad de mesas.') + '</p></div>';
+    CHECKLIST.forEach(function (txt, i) {
+      h += '<button class="check' + (checks[i] ? ' ok' : '') + '" onclick="tildar(' + i + ')"><span class="caja">' + (checks[i] ? '✓' : '') + '</span><span>' + txt + '</span></button>';
+    });
+    h += '<button class="btn" onclick="irPagina(\'conectados\')"' + (listo ? '' : ' disabled') + '>' +
+      (listo ? 'Siguiente →' : (est.mesas ? 'Tildá todos los puntos para seguir' : 'Elegí cuántas mesas juegan')) + '</button><p class="error" id="err"></p></div>';
+    return h;
+  }
+  return '<div class="pre"><p class="etapa">Paso 2 de 2 · Jugadores</p><h2>Escanear los QR</h2><p>Pedí a cada jugador que escanee el QR de su tablero. Abajo ves quién ya se conectó.</p>' +
+    '<div class="botones"><button class="btn-borde" onclick="irPagina(\'setup\')">← Atrás</button>' +
+    '<button class="btn verde" onclick="accion(\'semana\', 1)">Empezar semana 1</button></div><p class="error" id="err"></p></div>';
 }
 
 function dibujar() {
@@ -296,19 +409,14 @@ function dibujar() {
   var h = "";
 
   if (est.semana === 0) {
-    var opc = "";
-    for (var m = 1; m <= est.maxMesas; m++) opc += '<button class="mesa-opc' + (m === est.mesas ? ' sel' : '') + '" onclick="accion(\'mesas\', ' + m + ')">' + m + '</button>';
-    h += '<div class="inicio"><h2>El juego no empezó</h2><p>Elegí cuántas mesas juegan. Cuando todos hayan escaneado su QR, habilitá la semana 1.</p>' +
-      '<div class="mesas"><p class="lbl">Mesas en juego</p><div class="opciones" style="grid-template-columns:repeat(' + est.maxMesas + ',1fr)">' + opc + '</div>' +
-      '<p class="ayuda">' + (est.mesas ? 'Se usan los tableros de las mesas 1 a ' + est.mesas + '. Se puede cambiar hasta empezar la semana 1.' : 'Todavía no elegiste la cantidad de mesas.') + '</p></div>' +
-      '<button class="btn verde" onclick="accion(\'semana\', 1)"' + (est.mesas ? '' : ' disabled') + '>' + (est.mesas ? 'Empezar semana 1' : 'Elegí cuántas mesas juegan') + '</button><p class="error" id="err"></p></div>';
+    h += htmlPreparacion();
   } else {
-    h += '<div class="reloj"><span class="t" id="reloj">00:00</span><span class="lbl">en el paso ' + est.paso + '<br>' + PASOS[est.paso - 1] + '</span></div>';
+    h += '<div class="reloj"><span class="t" id="reloj"></span><span class="lbl">en el paso ' + est.paso + '<br>' + PASOS[est.paso - 1] + '</span></div>';
     h += '<p class="titulo">Pasos de la semana ' + est.semana + '<span class="der">Tocá uno para ir directo</span></p><div class="pasos">';
     PASOS.forEach(function (nombre, i) {
       var n = i + 1, cls = n < est.paso ? "hecho" : (n === est.paso ? "actual" : "");
       h += '<button class="paso ' + cls + '" onclick="irPaso(' + n + ')"><span class="n">' + (n < est.paso ? "✓" : n) + '</span>' + nombre +
-        (n === est.paso ? '<span class="ahora">LO VEN AHORA</span>' : '') + '</button>' + (n === est.paso ? htmlInstrFac(n) : '');
+        (n === est.paso ? '<span class="ahora">LO VEN AHORA</span>' : '') + '</button>' + (n === est.paso ? htmlInstrFac(n) + htmlQuienTermino(n) : '');
     });
     h += '</div>';
     if (est.paso < 6) {
@@ -331,6 +439,7 @@ function dibujar() {
     h += '<p class="error" id="err"></p>';
   }
 
+  if (est.semana === 0 && pagina === "setup") { $("cont").innerHTML = h; return; }
   // Registros por mesa y rol: ✓ = entrega (paso 4), ✓✓ = entrega y pedido (paso 6)
   var ent = est.entregas || {}, total = 0, nEnt = 0, nPed = 0;
   h += '<div class="sep"></div>';

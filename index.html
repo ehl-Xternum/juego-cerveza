@@ -110,6 +110,11 @@
   .modal.paso .cuerpo-paso { padding: 16px 18px 18px; font-size: 1.02rem; line-height: 1.5; font-weight: 400; color: var(--texto); }
   .modal.paso .cuerpo-paso ul { margin: 0; padding-left: 18px; }
   .modal.paso .cuerpo-paso li + li { margin-top: 6px; }
+  .btn-hecho { display: block; width: 100%; margin-top: 18px; border: none; border-radius: 16px; padding: 17px; font-family: inherit; font-size: 1.4rem; font-weight: 900; letter-spacing: .02em; background: var(--rol); color: var(--rol-texto); box-shadow: 0 5px 0 rgba(0,0,0,.28), 0 8px 18px rgba(0,0,0,.18); cursor: pointer; }
+  .btn-hecho:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,.28), 0 3px 8px rgba(0,0,0,.18); }
+  .btn-hecho:disabled { opacity: .6; }
+  .hecho-ok { margin-top: 16px; background: #e3f8ee; color: #0a7a4b; border: 2px solid #0a7a4b; border-radius: 14px; padding: 12px; text-align: center; font-weight: 900; line-height: 1.35; }
+  .hecho-ok small { display: block; font-weight: 700; font-size: .85rem; color: #2f6b52; }
   .modal.paso .pie-paso { margin-top: 16px; padding-top: 12px; border-top: 1.5px solid var(--borde); color: var(--texto-3); font-size: .85rem; font-weight: 700; text-align: center; }
 
   /* ---------- Instrucciones con tarjetas del tablero ---------- */
@@ -164,6 +169,13 @@
   .btn-borde { border: 2px solid var(--campo); background: #fff; border-radius: var(--radio); padding: 13px; font-size: 1.02rem; font-weight: 700; }
 
   /* ---------- Popup de espera ---------- */
+  #cuenta { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 60; display: none; align-items: center; gap: 8px; background: #1f2933; color: #fff; border-radius: 999px; padding: 7px 16px 7px 12px; font-weight: 900; font-size: 1.15rem; font-variant-numeric: tabular-nums; box-shadow: 0 4px 14px rgba(0,0,0,.3); white-space: nowrap; }
+  #cuenta.visible { display: flex; }
+  body.con-cuenta { padding-top: 58px; }
+  #cuenta .lbl { font-size: .72rem; letter-spacing: .05em; opacity: .8; }
+  #cuenta.poco { background: #F29F05; color: #1f2933; }
+  #cuenta.fin { background: #C70627; animation: latido 1s infinite; }
+  @keyframes latido { 50% { transform: translateX(-50%) scale(1.07); } }
   #overlay { align-items: center; justify-content: center; padding: 20px; z-index: 50; background: rgba(15, 23, 32, .72); }
   .modal { border-radius: 22px; padding: 28px 22px 20px; width: 100%; max-width: 360px; text-align: center; animation: entrar .25s ease-out; }
   @keyframes entrar { from { transform: scale(.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -201,6 +213,7 @@
 </style>
 </head>
 <body>
+<div id="cuenta"></div>
 
 <!-- ============ FONDOS ILUSTRADOS ============ -->
 <div class="fondo" id="fondo" aria-hidden="true"></div>
@@ -371,34 +384,34 @@ function tab(nombre, rol) {
 var INSTRUCCIONES = {
   // Todos los roles tienen 6 pasos, iguales a los pasos del facilitador
   "Minorista": [
-    ["Mover cajones desde", ["A", "Minorista"], "hacia", ["B", "Minorista"]],
+    ["Mover todos los cajones desde", ["A", "Minorista"], "hacia", ["B", "Minorista"]],
     ["Esperar a que el resto de los roles terminen sus movimientos para avanzar al paso 3."],
     ["Mirar", ["D", "Cliente", "Orden de compra"], "Colocarla con el dorso hacia arriba debajo de la parte superior del tablero de " + tab("Demanda del Cliente", "Cliente") + ". Decidir cuántos cajones entregar."],
-    ["Mover cajones desde", ["B", "Minorista"], "hacia", ["F", "Cliente"], "Registrar en la app la entrega."],
+    ["Mover cantidad de cajones elegida desde", ["B", "Minorista"], "hacia", ["F", "Cliente"], "Registrar en la app la entrega."],
     ["Mover", ["D", "Minorista"], "hacia", ["E", "Mayorista"]],
     ["Tomar la carta que está bajo el tablero de " + tab("Compras del Minorista", "Minorista"), ["OC", "Minorista", null, ["Minorista", "Mayorista"]], "escribir pedido y colocarla en", ["D", "Minorista"], "Registrar en la app."]
   ],
   "Mayorista": [
-    ["Mover cajones desde", ["A", "Mayorista"], "hacia", ["B", "Mayorista"]],
-    ["Mover cajones desde", ["C", "Mayorista"], "hacia", ["A", "Minorista"]],
+    ["Mover todos los cajones desde", ["A", "Mayorista"], "hacia", ["B", "Mayorista"]],
+    ["Mover todos los cajones desde", ["C", "Mayorista"], "hacia", ["A", "Minorista"]],
     ["Mirar", ["E", "Mayorista"], "y colocarla con el dorso hacia arriba debajo de la parte superior del tablero de " + tab("Compras del Minorista", "Minorista") + ". Decidir cuántos cajones entregar."],
-    ["Mover cajones desde", ["B", "Mayorista"], "hacia", ["C", "Mayorista"], "Registrar en la app la entrega."],
+    ["Mover cantidad de cajones elegida desde", ["B", "Mayorista"], "hacia", ["C", "Mayorista"], "Registrar en la app la entrega."],
     ["Mover", ["D", "Mayorista"], "hacia", ["E", "Distribuidor"]],
     ["Tomar la carta que está bajo el tablero de " + tab("Compras del Mayorista", "Mayorista"), ["OC", "Mayorista", null, ["Mayorista", "Distribuidor"]], "escribir pedido y colocarla en", ["D", "Mayorista"], "Registrar en la app."]
   ],
   "Distribuidor": [
-    ["Mover cajones desde", ["A", "Distribuidor"], "hacia", ["B", "Distribuidor"]],
-    ["Mover cajones desde", ["C", "Distribuidor"], "hacia", ["A", "Mayorista"]],
+    ["Mover todos los cajones desde", ["A", "Distribuidor"], "hacia", ["B", "Distribuidor"]],
+    ["Mover todos los cajones desde", ["C", "Distribuidor"], "hacia", ["A", "Mayorista"]],
     ["Mirar", ["E", "Distribuidor"], "y colocarla con el dorso hacia arriba debajo de la parte superior del tablero de " + tab("Compras del Mayorista", "Mayorista") + ". Decidir cuántos cajones entregar."],
-    ["Mover cajones desde", ["B", "Distribuidor"], "hacia", ["C", "Distribuidor"], "Registrar en la app la entrega."],
+    ["Mover cantidad de cajones elegida desde", ["B", "Distribuidor"], "hacia", ["C", "Distribuidor"], "Registrar en la app la entrega."],
     ["Mover", ["D", "Distribuidor"], "hacia", ["E", "Fábrica"]],
     ["Tomar la carta que está bajo el tablero de " + tab("Compras del Distribuidor", "Distribuidor"), ["OC", "Distribuidor", null, ["Distribuidor", "Fábrica"]], "escribir pedido y colocarla en", ["D", "Distribuidor"], "Registrar en la app."]
   ],
   "Fábrica": [
-    ["Mover cajones desde", ["A", "Fábrica", "Productos<br>terminados"], "hacia", ["B", "Fábrica"], "y mover cajones desde", ["C", "Cliente"], "hacia", ["A", "Fábrica", "Productos<br>terminados"]],
-    ["Mover cajones desde", ["C", "Fábrica"], "hacia", ["A", "Distribuidor"]],
+    ["Mover todos los cajones desde", ["A", "Fábrica", "Productos<br>terminados"], "hacia", ["B", "Fábrica"], "y mover todos los cajones desde", ["C", "Cliente"], "hacia", ["A", "Fábrica", "Productos<br>terminados"]],
+    ["Mover todos los cajones desde", ["C", "Fábrica"], "hacia", ["A", "Distribuidor"], "Dejar la carta de <b>Orden de producción</b> con el dorso hacia arriba debajo de la parte superior del tablero de " + tab("Compras del Fabricante", "Fábrica") + "."],
     ["Mirar", ["E", "Fábrica"], "y colocarla con el dorso hacia arriba debajo de la parte superior del tablero de " + tab("Compras del Distribuidor", "Distribuidor") + ". Decidir cuántos cajones entregar."],
-    ["Mover cajones desde", ["B", "Fábrica"], "hacia", ["C", "Fábrica"], "Registrar en la app la entrega."],
+    ["Mover cantidad de cajones elegida desde", ["B", "Fábrica"], "hacia", ["C", "Fábrica"], "Registrar en la app la entrega."],
     ["Esperar a que el resto de los roles terminen sus movimientos para avanzar al paso 6."],
     ["Tomar la carta que está bajo el tablero de " + tab("Compras del Fabricante", "Fábrica"), ["OC", "Fábrica", "Orden de<br>producción", ["Fábrica"]], "escribir pedido y colocarla en", ["D", "Fábrica", "Orden de<br>producción"], "Registrar en la app."]
   ]
@@ -480,7 +493,31 @@ var estado = null;        // respuesta de obtenerEstado
 var pendiente = null;     // jugada a confirmar
 var semanaEsperada = null;
 var etapa = null;         // "entrega" (paso 4) o "pedido" (paso 6)
-var juego = null;         // { semana, paso } que maneja el facilitador
+var juego = null;
+// Cuenta regresiva de cada paso (segundos). Al llegar a 0 sólo se avisa: no se registra nada.
+var TIEMPO_PASO = { 1: 30, 2: 30, 3: 45, 4: 60, 5: 20, 6: 75 };
+function fmtTiempo(seg) { return Math.floor(seg / 60) + ":" + String(seg % 60).padStart(2, "0"); }
+var desfase = 0, avisoFin = "";
+function actualizarCuenta() {
+  var el = $("cuenta");
+  if (!el) return;
+  var m = $("modal");
+  var esperando = m && m.className.indexOf("espera") !== -1 && $("overlay").classList.contains("visible");
+  var mostrar = !!(yo && juego && juego.inicio && juego.semana >= 1 && !esperando);
+  document.body.classList.toggle("con-cuenta", mostrar);
+  if (!mostrar) { el.className = ""; return; }
+  var total = TIEMPO_PASO[juego.paso] || 0;
+  var resta = Math.ceil(total - (Date.now() - desfase - juego.inicio) / 1000);
+  if (resta <= 0) {
+    el.className = "visible fin"; el.innerHTML = '⏰ ¡Se terminó el tiempo!';
+    var k = juego.semana + "-" + juego.paso;
+    if (avisoFin !== k) { avisoFin = k; try { if (navigator.vibrate) navigator.vibrate([300, 120, 300]); } catch (e) {} }
+  } else {
+    el.className = "visible" + (resta <= 10 ? " poco" : "");
+    el.innerHTML = '<span class="lbl">PASO ' + juego.paso + '</span>⏱ ' + fmtTiempo(resta);
+  }
+}
+setInterval(actualizarCuenta, 500);         // { semana, paso } que maneja el facilitador
 var NOMBRES_PASOS = ["Recibir en el depósito", "Enviar el transporte al cliente", "Leer la orden de compra", "Entregar y registrar en la app", "Pasar la orden al proveedor", "Hacer la nueva orden de compra"];
 var timerPolling = null;
 var audioCtx = null;
@@ -641,7 +678,8 @@ function refrescarEstado() {
   return servidor("obtenerEstado", yo.grupo, yo.rol, yo.dispositivo).then(function (e) {
     if (!e.lugarValido) { lugarLiberado(); return null; }
     estado = e;
-    juego = { semana: e.semanaHabilitada, paso: e.paso };
+    juego = { semana: e.semanaHabilitada, paso: e.paso, inicio: e.inicioPaso };
+    if (e.ahora) desfase = Date.now() - e.ahora;
     return e;
   }).catch(function () {
     document.querySelector("#pCargando .cargando").innerHTML = 'No se pudo conectar. <br><button class="btn-sec" onclick="iniciarJuego()">Reintentar</button>';
@@ -857,7 +895,44 @@ function htmlCosto() {
   if (!estado || estado.costo == null) return '';
   return '<div class="costo-banner"><span class="et">💰 TU COSTO<br>ACUMULADO</span><span class="val">$' + formatear(estado.costo) + '</span></div>';
 }
+// Pasos en los que el rol sólo espera (no tiene que avisar que terminó)
+function pasoDeEspera(rol, paso) { return (rol === "Minorista" && paso === 2) || (rol === "Fábrica" && paso === 5); }
+var hechosLocal = {};
+function pasoHecho(paso) {
+  return !!hechosLocal[juego.semana + "-" + paso] || (estado && estado.semanaHabilitada === juego.semana && (estado.pasosHechos || []).indexOf(paso) !== -1);
+}
+function htmlBotonHecho() {
+  if (pasoDeEspera(yo.rol, juego.paso)) return '';
+  if (pasoHecho(juego.paso)) return '<div class="hecho-ok">✓ ¡Listo!<small>Esperá a que el facilitador avance</small></div>';
+  return '<button class="btn-hecho" id="btnHecho" onclick="marcarHecho()">¡Listo!</button><p class="error" id="errHecho" style="margin:8px 0 0"></p>';
+}
+function marcarHecho() {
+  var b = $("btnHecho"); if (b) { b.disabled = true; b.textContent = "Avisando…"; }
+  var sem = juego.semana, paso = juego.paso;
+  servidor("marcarPaso", yo.grupo, yo.rol, yo.dispositivo, sem, paso).then(function () {
+    hechosLocal[sem + "-" + paso] = true;
+    if (juego.semana === sem && juego.paso === paso) mostrarPopupPaso();
+  }).catch(function (e) {
+    if (e.message === "LUGAR_LIBERADO") { lugarLiberado(); return; }
+    var b = $("btnHecho"); if (b) { b.disabled = false; b.textContent = "¡Listo!"; }
+    var er = $("errHecho"); if (er) er.textContent = "No se pudo avisar. Probá de nuevo.";
+  });
+}
+
+// Después de tocar "¡Listo!": cartel de espera (igual al del inicio) hasta que el facilitador avance
+function mostrarEsperaPaso() {
+  var modal = $("modal");
+  modal.className = "modal espera";
+  var sig = juego.paso < 6 ? "al paso " + (juego.paso + 1) : "al siguiente paso";
+  modal.innerHTML =
+    '<div class="ok-envio"><span>✓</span>Paso ' + juego.paso + ' terminado</div>' +
+    '<div class="icono">⏳</div>' +
+    '<h2>Esperá</h2><p class="texto">Esperá a que el facilitador avance ' + sig + '.</p>' + htmlCosto();
+  $("overlay").classList.add("visible");
+}
+
 function mostrarPopupPaso() {
+  if (!pasoDeEspera(yo.rol, juego.paso) && pasoHecho(juego.paso)) { mostrarEsperaPaso(); return; }
   var modal = $("modal");
   modal.className = "modal paso";
   var insignia = '';
@@ -867,6 +942,7 @@ function mostrarPopupPaso() {
       '<div class="cab-paso"><div class="sup">SEMANA ' + juego.semana + (n ? ' · PASO ' + n + ' DE ' + totalPasos(yo.rol) : '') + '</div><h2>Instrucciones</h2></div>' +
       '<div class="cuerpo-paso">' + htmlCosto() + insignia +
       (n ? htmlInstruccion(yo.rol, n) : '<p style="margin:0;text-align:center">En este paso ' + (yo.rol === "Fábrica" ? "la fábrica" : "el " + yo.rol.toLowerCase()) + ' no mueve nada.<br>Esperá a que el facilitador avance.</p>') +
+      htmlBotonHecho() +
       '<p class="pie-paso">El facilitador va a avanzar al siguiente paso</p></div>';
     $("overlay").classList.add("visible");
     return;
@@ -919,6 +995,7 @@ function consultarJuego() {
   return servidor("estadoJuego").then(function (j) {
     var antes = juego;
     juego = j;
+    if (j.ahora) desfase = Date.now() - j.ahora;
     var cambioSemana = !antes || j.semana !== antes.semana;
     var cambioPaso = !antes || j.paso !== antes.paso;
     if (cambioSemana) {
