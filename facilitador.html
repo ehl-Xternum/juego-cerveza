@@ -134,6 +134,25 @@
   .nombres .estado.ok { color: var(--verde); }
   .nombres .estado.falta { color: var(--amarillo-texto); }
   .lbl-mesa { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .btn-fin { width: 100%; margin-top: 10px; border: 2px solid #b8860b; background: #FFF6DB; color: #7a5300; border-radius: var(--radio); padding: 13px; font-size: 1rem; font-weight: 900; }
+  .velo { position: fixed; inset: 0; background: rgba(15, 23, 32, .6); display: none; z-index: 40; align-items: flex-end; justify-content: center; }
+  .velo.visible { display: flex; }
+  .hoja { background: #fff; width: 100%; max-width: 520px; border-radius: 22px 22px 0 0; padding: 22px 18px 20px; animation: subir .22s ease-out; }
+  @keyframes subir { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .hoja h2 { margin: 0; font-size: 1.3rem; font-weight: 900; }
+  .hoja .sub2 { margin: 2px 0 12px; color: var(--texto-2); font-size: .92rem; }
+  .fila-conf { display: flex; align-items: center; gap: 10px; background: var(--gris); border-radius: var(--radio); padding: 11px 14px; margin-top: 8px; font-weight: 700; font-size: .95rem; }
+  .fila-conf b { margin-left: auto; font-weight: 900; }
+  .fila-conf.aviso { background: var(--amarillo); color: var(--amarillo-texto); }
+  .botones-conf { display: grid; grid-template-columns: 1fr 1.5fr; gap: 10px; margin-top: 16px; }
+  .ganador { background: #FFF6DB; border: 2px solid #b8860b; border-radius: var(--radio); padding: 14px; margin: 0 0 16px; }
+  .ganador .t1 { font-size: .75rem; font-weight: 900; letter-spacing: .06em; color: #7a5300; margin: 0; }
+  .ganador .t2 { font-size: 1.5rem; font-weight: 900; margin: 2px 0 2px; }
+  .ganador .t3 { color: var(--texto-2); font-weight: 700; font-size: .9rem; margin: 0 0 8px; }
+  .ganador ol { margin: 0; padding-left: 20px; font-weight: 700; }
+  .ganador li span { float: right; font-variant-numeric: tabular-nums; }
+  .ganador .ok { color: var(--verde); font-weight: 900; font-size: .9rem; margin: 10px 0 0; }
+  .ganador .mal { color: var(--rojo); font-weight: 900; font-size: .9rem; margin: 10px 0 0; }
   .tarea-fac { display: flex; gap: 10px; align-items: flex-start; background: #FFF1D6; border-left: 6px solid #F29F05; border-radius: 10px; padding: 10px 12px; margin: 0 0 12px; color: #5c3b00; font-size: .95rem; line-height: 1.4; }
   .tarea-fac .ic { font-size: 1.3rem; line-height: 1; }
   .tarea-fac .tt { display: block; font-size: .72rem; font-weight: 900; letter-spacing: .06em; color: #b26b00; margin-bottom: 2px; }
@@ -145,6 +164,20 @@
 <div class="app">
   <div class="cab"><h1>Panel del facilitador</h1><span class="pill" id="pill">–</span></div>
   <div class="cont" id="cont"><div class="cargando">Cargando…</div></div>
+</div>
+
+<div class="velo" id="velTerminar" onclick="if(event.target===this)cerrarTerminar()">
+  <div class="hoja">
+    <h2>¿Terminar la partida?</h2>
+    <p class="sub2">Se calcula el equipo ganador (el de menor costo total) y se escribe en la planilla y en la diapositiva del ganador.</p>
+    <div class="fila-conf">Semanas que cuentan<b id="confSemanas"></b></div>
+    <div class="fila-conf aviso" id="confAviso"></div>
+    <div class="botones-conf">
+      <button class="btn-borde" onclick="cerrarTerminar()">Volver</button>
+      <button class="btn" id="btnTerminar" onclick="confirmarTerminar()">Sí, terminar</button>
+    </div>
+    <p class="error" id="errTerminar"></p>
+  </div>
 </div>
 
 <script>
@@ -520,6 +553,42 @@ function htmlPreparacion() {
     '<button class="btn verde" onclick="accion(\'semana\', 1)">Empezar semana 1</button></div><p class="error" id="err"></p></div>';
 }
 
+// ----- Terminar partida -----
+function abrirTerminar() {
+  // Cuenta todos los lugares de las mesas en juego (aunque no tengan celular)
+  var f = [];
+  est.grupos.forEach(function (g, i) { est.roles.forEach(function (r) { if (!est.enviados[g + "|" + r]) f.push(nombreMesa(i) + " " + r); }); });
+  var semanas = f.length ? est.semana - 1 : est.semana;
+  $("confSemanas").textContent = semanas >= 1 ? "1 a " + semanas : "ninguna";
+  var av = $("confAviso");
+  if (f.length) { av.style.display = ""; av.textContent = "La semana " + est.semana + " no cuenta: falta registrar " + f.length + " pedido(s)."; }
+  else av.style.display = "none";
+  $("btnTerminar").disabled = false; $("btnTerminar").textContent = "Sí, terminar";
+  $("errTerminar").textContent = "";
+  $("velTerminar").classList.add("visible");
+}
+function cerrarTerminar() { $("velTerminar").classList.remove("visible"); }
+function confirmarTerminar() {
+  var b = $("btnTerminar"); b.disabled = true; b.textContent = "Calculando…";
+  pendientes++; ultimaAccion = Date.now();
+  servidor("terminarPartida", CLAVE).then(function (e) {
+    pendientes--; cerrarTerminar(); recibir(e); window.scrollTo(0, 0);
+  }).catch(function (err) {
+    pendientes--; b.disabled = false; b.textContent = "Sí, terminar";
+    $("errTerminar").textContent = err.message;
+  });
+}
+function htmlGanador() {
+  var g = est.ganador;
+  if (!g) return "";
+  var h = '<div class="ganador"><p class="t1">🏆 ' + (g.ganadores.length > 1 ? 'EMPATE · GANADORES' : 'EQUIPO GANADOR') + '</p>' +
+    '<p class="t2">' + esc(g.texto) + '</p><p class="t3">Costo total $' + g.costo + ' · semanas 1 a ' + g.semanaFin + '</p><ol>';
+  g.ranking.forEach(function (x) { h += '<li>' + esc(x.nombre) + '<span>$' + x.costo + '</span></li>'; });
+  h += '</ol>' + (g.diapositiva ? '<p class="ok">✓ Diapositiva del ganador actualizada</p>'
+    : '<p class="mal">No se pudo actualizar la diapositiva: ' + esc(g.errorDiapositiva || "") + '</p>') + '</div>';
+  return h;
+}
+
 function dibujar() {
   var act = document.activeElement;
   if (act && act.classList && act.classList.contains("in-nombre")) { actualizarEstadoNombres(); return; }
@@ -529,6 +598,7 @@ function dibujar() {
   if (est.semana === 0) {
     h += htmlPreparacion();
   } else {
+    h += htmlGanador();
     h += '<div class="reloj"><span class="t" id="reloj"></span><span class="lbl">en el paso ' + est.paso + '<br>' + PASOS[est.paso - 1] + '</span></div>';
     h += '<p class="titulo">Pasos de la semana ' + est.semana + '<span class="der">Tocá uno para ir directo</span></p><div class="pasos">';
     PASOS.forEach(function (nombre, i) {
@@ -552,7 +622,8 @@ function dibujar() {
         ? '<div class="nota amarilla">Falta registrar el pedido: ' + f.join(", ") + '</div>'
         : '<div class="nota">Todos registraron el pedido de la semana ' + est.semana + '.</div>';
       h += '<div class="botones"><button class="btn-borde" onclick="irPaso(5)">← Atrás</button>' +
-        '<button class="btn verde" onclick="pasarSemana()">Pasar a la semana ' + (est.semana + 1) + '</button></div>';
+        '<button class="btn verde" onclick="pasarSemana()">Pasar a la semana ' + (est.semana + 1) + '</button></div>' +
+        '<button class="btn-fin" onclick="abrirTerminar()">🏆 Terminar partida y mostrar ganador</button>';
     }
     h += '<p class="error" id="err"></p>';
   }
