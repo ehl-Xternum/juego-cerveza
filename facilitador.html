@@ -326,22 +326,26 @@ function servidor(fn) {
       run[fn].apply(run, args);
     });
   }
-  return fetch(API_URL, { method: "POST", body: JSON.stringify({ fn: fn, args: args }), credentials: "omit", redirect: "follow" })
+  var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+  var corte = ctrl ? setTimeout(function () { ctrl.abort(); }, 30000) : null;
+  return fetch(API_URL, { method: "POST", body: JSON.stringify({ fn: fn, args: args }), credentials: "omit", redirect: "follow", signal: ctrl ? ctrl.signal : undefined })
     .then(function (r) {
       if (!r.ok) throw new Error("No hay conexión con el servidor. Probá de nuevo.");
       return r;
     }, function () { throw new Error("No hay conexión con el servidor. Probá de nuevo."); })
     .then(function (r) { return r.json(); })
     .then(function (d) {
+      clearTimeout(corte);
       if (d.error) throw new Error(d.error);
       return d.ok;
-    });
+    }, function (e) { clearTimeout(corte); throw e; });
 }
 
 function arrancar(clave) {
   CLAVE = clave || "";
   actualizar();
   setInterval(actualizar, 4000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) actualizar(); });
   setInterval(tic, 1000);
 }
 window.onload = function () {
