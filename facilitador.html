@@ -304,12 +304,18 @@ window.onload = function () {
   google.script.url.getLocation(function (loc) { arrancar(loc && loc.parameter && loc.parameter.f); });
 };
 
+// Las consultas no se acumulan, y una respuesta que salió antes de tocar un botón se descarta
+var consultando = false, pendientes = 0, ultimaAccion = 0;
 function actualizar() {
-  if (ocupado) return;
-  servidor("panelEstado", CLAVE).then(recibir).catch(function (e) {
+  if (consultando || pendientes) return;
+  consultando = true;
+  var t = Date.now();
+  servidor("panelEstado", CLAVE).then(function (e) {
+    if (t >= ultimaAccion && !pendientes) recibir(e);
+  }).catch(function (e) {
     if (est && e.message.indexOf("Clave") === -1) return; // se reintenta en el próximo ciclo
     $("cont").innerHTML = '<div class="cargando">' + e.message + '</div>';
-  });
+  }).then(function () { consultando = false; });
 }
 
 function recibir(e) {
@@ -319,15 +325,28 @@ function recibir(e) {
   dibujar();
 }
 
+// La pantalla cambia apenas se toca el botón; el aviso a Google viaja por detrás
 function accion(tipo, valor) {
-  if (ocupado) return;
-  ocupado = true;
-  document.querySelectorAll("button").forEach(function (b) { b.disabled = true; });
-  servidor("panelAccion", CLAVE, tipo, valor, est.semana).then(function (e) {
-    ocupado = false; recibir(e);
+  var semanaVista = est.semana;
+  if (tipo === "mesas") {
+    est.mesas = valor;
+  } else if (tipo === "paso") {
+    est.paso = valor; est.inicioPaso = Date.now() - desfase;
+  } else if (tipo === "semana") {
+    est.semana = valor; est.paso = 1; est.inicioPaso = Date.now() - desfase;
+    est.entregas = {}; est.enviados = {}; est.listos = {};
+  }
+  ultimaAccion = Date.now();
+  pendientes++;
+  dibujar();
+  servidor("panelAccion", CLAVE, tipo, valor, semanaVista).then(function (e) {
+    pendientes--;
+    if (!pendientes) recibir(e);
   }).catch(function (err) {
-    ocupado = false; dibujar();
-    $("err").textContent = err.message;
+    pendientes--;
+    ultimaAccion = 0;
+    actualizar(); // vuelve a mostrar lo que realmente quedó guardado
+    setTimeout(function () { if ($("err")) $("err").textContent = err.message; }, 1500);
   });
 }
 
