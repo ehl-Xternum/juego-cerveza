@@ -557,7 +557,7 @@ var semanaEsperada = null;
 var etapa = null;         // "entrega" (paso 4) o "pedido" (paso 6)
 var juego = null;
 // Cuenta regresiva de cada paso (segundos). Al llegar a 0 sólo se avisa: no se registra nada.
-var TIEMPO_PASO = { 1: 30, 2: 30, 3: 45, 4: 60, 5: 20, 6: 75 };
+var TIEMPO_PASO = { 1: 35, 2: 35, 3: 50, 4: 65, 5: 25, 6: 80 }; // incluye ~5 s que tarda en llegar el paso al celular
 function fmtTiempo(seg) { return Math.floor(seg / 60) + ":" + String(seg % 60).padStart(2, "0"); }
 var desfase = 0, avisoFin = "";
 // Pantalla final: el celular sólo sabe que la partida terminó, no quién ganó

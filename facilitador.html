@@ -134,7 +134,7 @@
   .nombres .estado.ok { color: var(--verde); }
   .nombres .estado.falta { color: var(--amarillo-texto); }
   .lbl-mesa { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .btn-fin { width: 100%; margin-top: 10px; border: 2px solid #b8860b; background: #FFF6DB; color: #7a5300; border-radius: var(--radio); padding: 13px; font-size: 1rem; font-weight: 900; }
+  .btn-fin { width: 100%; margin-top: 10px; border: 2px solid rgba(199, 6, 39, .35); background: rgba(199, 6, 39, .08); color: #9b2335; border-radius: var(--radio); padding: 13px; font-size: 1rem; font-weight: 900; }
   .velo { position: fixed; inset: 0; background: rgba(15, 23, 32, .6); display: none; z-index: 40; align-items: flex-end; justify-content: center; }
   .velo.visible { display: flex; }
   .hoja { background: #fff; width: 100%; max-width: 520px; border-radius: 22px 22px 0 0; padding: 22px 18px 20px; animation: subir .22s ease-out; }
@@ -430,7 +430,7 @@ function faltantes(mapa) {
 }
 
 // Cuenta regresiva de cada paso (segundos). Al llegar a 0 sólo se avisa: no se registra nada.
-var TIEMPO_PASO = { 1: 30, 2: 30, 3: 45, 4: 60, 5: 20, 6: 75 };
+var TIEMPO_PASO = { 1: 35, 2: 35, 3: 50, 4: 65, 5: 25, 6: 80 }; // incluye ~5 s que tarda en llegar el paso al celular
 function fmtTiempo(seg) { return Math.floor(seg / 60) + ":" + String(seg % 60).padStart(2, "0"); }
 function tic() {
   if (!est || !$("reloj")) return;
@@ -459,7 +459,7 @@ function nombreMesa(i) {
   var n = est && est.modoNombres === "personalizados" && est.nombres && est.nombres[i];
   return n || "Mesa " + (i + 1);
 }
-var modoElegido = null, borrador = null, msgNombres = "";
+var modoElegido = null, borrador = null, msgNombres = "", guardandoNombres = false;
 function modoActual() { return modoElegido || (est && est.modoNombres) || ""; }
 function elegirModo(m) {
   modoElegido = m;
@@ -488,14 +488,18 @@ function confirmarNombres() {
     vistos[k] = true;
   }
   borrador = lista.concat(borrador.slice(est.mesas));
+  guardandoNombres = true;
   accion("nombres", { modo: "personalizados", nombres: lista });
+  setTimeout(function () { guardandoNombres = false; actualizarEstadoNombres(); }, 700);
 }
 function mostrarMsgNombres(t) { msgNombres = t; var e = $("errNombres"); if (e) e.textContent = t; }
 function actualizarEstadoNombres() {
-  var e = $("estadoNombres"); if (!e) return;
   var ok = nombresGuardados();
-  e.className = "estado " + (ok ? "ok" : "falta");
-  e.textContent = ok ? "✓ Nombres guardados" : "Escribí todos los nombres y tocá Confirmar.";
+  var bn = $("btnNombres");
+  if (bn) {
+    bn.textContent = guardandoNombres ? "Guardando…" : (ok ? "✓ Nombres guardados" : "Confirmar nombres");
+    bn.style.background = ok && !guardandoNombres ? "var(--verde)" : "";
+  }
   var b = $("btnSig");
   if (b) { var listo = checks.every(Boolean) && est.mesas && ok; b.disabled = !listo; b.textContent = textoSiguiente(); }
 }
@@ -514,12 +518,12 @@ function htmlNombres() {
     '<button class="' + (m === "personalizados" ? "sel" : "") + '" onclick="elegirModo(\'personalizados\')">Nombres propios</button></div>';
   if (m === "personalizados") {
     for (var i = 0; i < est.mesas; i++) {
-      h += '<label class="campo-nombre"><span>Mesa ' + (i + 1) + '</span><input class="in-nombre" maxlength="30" placeholder="Nombre de la empresa" value="' + esc(borrador[i] || "") + '" oninput="escribirNombre(' + i + ', this.value)" onblur="setTimeout(dibujarSiLibre, 50)"></label>';
+      h += '<label class="campo-nombre"><span>Mesa ' + (i + 1) + '</span><input class="in-nombre" maxlength="30" value="' + esc(borrador[i] || "") + '" oninput="escribirNombre(' + i + ', this.value)" onblur="setTimeout(dibujarSiLibre, 50)"></label>';
     }
-    h += '<button class="btn" style="padding:12px;font-size:1rem" onclick="confirmarNombres()">Confirmar nombres</button>' +
-      '<p class="error" id="errNombres" style="margin:6px 0 0">' + esc(msgNombres) + '</p>';
+    h += '<button class="btn" id="btnNombres" style="padding:12px;font-size:1rem" onclick="confirmarNombres()">Confirmar nombres</button>' +
+      '<p class="error" id="errNombres" style="margin:6px 0 0;min-height:0">' + esc(msgNombres) + '</p>';
   }
-  if (m) h += '<p class="estado" id="estadoNombres"></p>';
+
   return h + '</div>';
 }
 function dibujarSiLibre() { var a = document.activeElement; if (!(a && a.classList && a.classList.contains("in-nombre"))) dibujar(); }
@@ -633,6 +637,8 @@ function dibujar() {
   }
 
   if (est.semana === 0 && pagina === "setup") { $("cont").innerHTML = h; actualizarEstadoNombres(); return; }
+  // Durante el juego alcanza con "¿Quién terminó el paso N?": la grilla general sólo se ve antes de empezar
+  if (est.semana > 0) { $("cont").innerHTML = h; tic(); return; }
   // Registros por mesa y rol: ✓ = entrega (paso 4), ✓✓ = entrega y pedido (paso 6)
   var ent = est.entregas || {}, total = 0, nEnt = 0, nPed = 0;
   h += '<div class="sep"></div>';
